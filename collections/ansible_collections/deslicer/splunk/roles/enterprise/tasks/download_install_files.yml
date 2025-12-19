@@ -1,0 +1,83 @@
+---
+# tasks file for deslicer.splunk.enterprise
+#
+# Prerequisite:
+#   The following variables must be provided by the dynamic inventory:
+#     - deslicer_api_url: Base URL for the Deslicer API
+#     - deslicer_api_key: Bearer token for API authentication
+#     - deslicer_files: List of files to download with name, path, checksum, dest
+#
+# Author: Roger Lindquist (github.com/deslicer)
+#
+# Release: 2025.3.2
+
+- name: Validate Deslicer API configuration
+  ansible.builtin.assert:
+    that:
+      - deslicer_api_url is defined
+      - deslicer_api_url | length > 0
+      - deslicer_api_key is defined
+      - deslicer_api_key | length > 0
+      - deslicer_files is defined
+      - deslicer_files | length > 0
+    fail_msg: >-
+      Deslicer API configuration is incomplete. Ensure the dynamic inventory
+      provides deslicer_api_url, deslicer_api_key, and deslicer_files variables.
+  when:
+    - not stat_splunk_enterprise_bin.stat.exists or
+      enterprise_upgrade | default(false)
+
+- name: Ensure cca_splunk_var_tmp directory exists
+  ansible.builtin.file:
+    path: "{{ cca_splunk_var_tmp }}"
+    state: directory
+    owner: "{{ splunk_user }}"
+    group: "{{ splunk_user }}"
+    mode: '0755'
+
+- name: Ensure subdirectories exist for downloads
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ splunk_user }}"
+    group: "{{ splunk_user }}"
+    mode: '0755'
+  loop: "{{ deslicer_files | map(attribute='dest') | unique | list }}"
+  when:
+    - deslicer_files is defined
+    - deslicer_files | length > 0
+
+- name: Find all Splunk tgz files in the tmp directory
+  ansible.builtin.find:
+    paths: "{{ cca_splunk_var_tmp }}"
+    patterns: 'splunk-*-Linux-x86_64.tgz'
+  register: find_cca_splunk_tmp_tgz
+
+- name: Cleanup all Splunk tgz files in tmp except current version
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ find_cca_splunk_tmp_tgz.files }}"
+  when: "'splunk-' ~ splunk_enterprise_version not in item.path"
+
+- name: Download files from Deslicer API
+  ansible.builtin.get_url:
+    url: "{{ deslicer_api_url }}{{ item.path }}"
+    dest: "{{ item.dest }}/{{ item.name }}"
+    headers:
+      Authorization: "Bearer {{ deslicer_api_key }}"
+    checksum: "{{ item.checksum }}"
+    owner: "{{ splunk_user }}"
+    group: "{{ splunk_user }}"
+    mode: "{{ item.mode | default('0644') }}"
+    timeout: 300
+  loop: "{{ deslicer_files }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: download_result
+  retries: 3
+  delay: 10
+  until: download_result is succeeded
+  when:
+    - not stat_splunk_enterprise_bin.stat.exists or
+      enterprise_upgrade | default(false)

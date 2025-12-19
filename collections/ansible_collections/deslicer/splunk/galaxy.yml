@@ -1,0 +1,15 @@
+namespace: deslicer
+name: splunk
+version: 0.1.0
+readme: README.md
+authors:
+  - Deslicer AB <info@deslicer.com>
+description: Ansible collection for Splunk Enterprise deployment and management
+license_file: LICENSE
+tags:
+  - splunk
+  - automation
+  - enterprise
+  - linux
+dependencies: {}
+repository: https://github.com/deslicer/ansible-collection-splunk

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<zone target="{{ firewall_zone_target }}">
+  <short>"{{ firewall_zone_name }}"</short>
+  <description>"{{ firewall_zone_description }}"</description>
+{% for item in firewall_ports %}
+  <port port="{{ item.port }}" protocol="{{ item.protocol }}"/>
+{% endfor %}
+{% if is_rsyslog_server|default("false") == "true" %}
+{% for item in rsyslog_logsources|default([]) %}
+  <port port="{{ item.port }}" protocol="{{ item.protocol }}"/>
+{% endfor %}
+{% endif %}
+  <icmp-block name="echo-request"/>
+  <icmp-block-inversion/>
+</zone>

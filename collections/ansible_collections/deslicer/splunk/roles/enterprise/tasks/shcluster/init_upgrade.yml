@@ -1,0 +1,19 @@
+---
+# tasks file for deslicer.splunk.enterprise
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Initialize rolling upgrade on a SHC member
+  ansible.builtin.command:
+    cmd: "{{ splunk_path }}/bin/splunk upgrade-init shcluster-members"
+  run_once: true
+  when:
+    - enterprise_upgrade | default(false)
+  tags:
+    - skip_ansible_lint

@@ -1,0 +1,16 @@
+galaxy_info:
+  author: Deslicer AB
+  description: Role for setting up servers with prerequisites for Splunk Enterprise
+  company: Deslicer AB (github.com/deslicer)
+
+  license: MIT
+
+  min_ansible_version: '2.18'
+
+#  dependencies:
+#   - deslicer.splunk.linux
+
+# Original work: cca_for_splunk by Roger Lindquist / Innovation Fleet
+# https://github.com/innovationfleet/cca_for_splunk
+# Copyright (c) 2024 Innovation Fleet - MIT License
+# Modifications Copyright (c) 2026 Deslicer AB

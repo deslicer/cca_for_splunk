@@ -1,0 +1,75 @@
+---
+# tasks file for deslicer.splunk.core
+#
+# Description: This tasks reads the splunk_conf_general_settings_flattened and
+#              apply them on each splunk host that is targeted by the
+#              playbook.
+#
+# Prerequisite:
+#              splunk_conf_general_settings_flattened needs to be defined, if
+#              not the task is not included.
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.2.1
+
+- name: Find Splunk files in etc/system/local
+  ansible.builtin.find:
+    paths: "{{ splunk_path }}/etc/system/local"
+    patterns: "*.conf"
+  register: find_splunk_local_conf
+  when:
+    - accept_cca_management | default(false)
+    - not cca_ansible_managed | default(false)
+
+- name: Create a copy of each file in etc/system/local
+  ansible.builtin.copy:
+    src: "{{ item.path }}"
+    dest: "{{ item.path }}.bak-{{ ansible_date_time.iso8601 }}"
+    remote_src: true
+    mode: '0600'
+  loop: "{{ find_splunk_local_conf.files }}"
+  when:
+    - accept_cca_management | default(false)
+    - not cca_ansible_managed | default(false)
+
+- name: Get current file stats
+  ansible.builtin.stat:
+    path: "{{ item.path }}"
+  register: file_stat
+  loop: "{{ splunk_conf_general_settings_flattened }}"
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Manage header line in splunk files, managed by ansible
+  community.general.ini_file:
+    path: "{{ item.path }}"
+    section:
+    option: '{{ file_managed_by_ansible }}'
+    value: null
+    state: present
+    allow_no_value: true
+    mode: "{{ (file_stat.results | selectattr('item.path', 'equalto', item.path) | first).stat.mode | default('0600') }}"
+  loop: "{{ splunk_conf_general_settings_flattened }}"
+  no_log: '{{ hide_password }}'
+  changed_when: false
+
+- name: Updates Splunk conf based on general settings
+  community.general.ini_file:
+    path: "{{ item.path }}"
+    section: "{{ item.section }}"
+    option: "{{ item.option | default(null) if item.state | default('present') != 'AbsentSection' else '' }}"
+    value: "{{ item.value | default(null) if item.state | default('present') != 'AbsentSection' else '' }}"
+    state: "{{ 'present' if item.state | default('present') == 'present' else 'absent' }}"
+    allow_no_value: "{{ 'yes' if (not item.value) else 'no' }}"
+    mode: "{{ (file_stat.results | selectattr('item.path', 'equalto', item.path) | first).stat.mode | default('0600') }}"
+  loop: "{{ splunk_conf_general_settings_flattened }}"
+  loop_control:
+    label: "{{ item.section }} - {{ item.option }}"
+  register: cca_splunk_settings_update
+
+- name: Include task to notify restart or need to push general settings
+  ansible.builtin.include_tasks: notify_splunk.yml
+  when:
+    - cca_splunk_settings_update is defined
+    - cca_splunk_settings_update.results is defined

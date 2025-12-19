@@ -1,0 +1,45 @@
+---
+# tasks file for deslicer.splunk.enterprise
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.3.1
+
+
+- name: Include tasks to login to splunk cli
+  ansible.builtin.include_role:
+    name: deslicer.splunk.core
+    tasks_from: splunk_login.yml
+  when:
+    - enterprise_upgrade | default(false)
+
+- name: Finalize rolling upgrade on a SHC member
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ splunk_timeout_upgrade_finalize_timeout | default('360') }}
+      {{ splunk_path }}/bin/splunk upgrade-finalize shcluster-members
+  register: splunk_upgrade_finalize_status
+  until: splunk_upgrade_finalize_status.stdout | regex_search('Upgrade of search head cluster members finalized')
+  retries: "{{ cca_splunk_finalize_upgrade_retries | default(30) | int }}"
+  delay: 30
+  run_once: true
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+  tags:
+    - skip_ansible_lint
+
+- name: Include tasks to logout on splunk cli
+  ansible.builtin.include_role:
+    name: deslicer.splunk.core
+    tasks_from: splunk_logout.yml
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+    - kv_command_check is defined
+    - kv_command_check.rc | default(0) == 0
+    - kv_command_check.stdout | default('') != ""

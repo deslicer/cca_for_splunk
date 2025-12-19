@@ -1,0 +1,190 @@
+---
+# tasks file for deslicer.splunk.enterprise
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.3.1
+
+- name: Gather only CPU facts
+  ansible.builtin.gather_facts:
+    gather_subset: hardware
+    gather_timeout: 10
+
+- name: Include task to get Splunk status
+  ansible.builtin.include_tasks: splunk_status.yml
+
+- name: Include task to stage files
+  ansible.builtin.include_tasks: stage_install_files.yml
+  when:
+    - enterprise_upgrade | default(false)
+
+- name: Stop splunk from command line
+  ansible.builtin.command:
+    cmd: '{{ stop_command }}'
+  when:
+    - stat_splunk_enterprise_bin.stat.exists
+    - enterprise_upgrade | default(false)
+    - inventory_hostname != groups.cluster_peers | default([])
+  tags:
+    - skip_ansible_lint
+
+- name: Find Splunk install file in tmp directory
+  ansible.builtin.find:
+    paths: "{{ cca_splunk_var_tmp }}"
+    patterns: "splunk-{{ splunk_enterprise_version }}-*64.tgz"
+  register: find_splunk_tgz
+
+- name: Assert that only a single splunk package is matched
+  ansible.builtin.assert:
+    that:
+      find_splunk_tgz.files | length == 1
+    fail_msg: >-
+      Could not find exactly one Splunk tar file on the host
+      that matches splunk-{{ splunk_enterprise_version }}-*64.tgz
+  when:
+    - not stat_splunk_enterprise_bin.stat.exists or
+      enterprise_upgrade | default(false)
+
+- name: Check if pigz is available, faster than standard tar
+  ansible.builtin.command: which pigz
+  register: pigz_check
+  changed_when: false
+  ignore_errors: true
+  no_log: true
+  when:
+    - not stat_splunk_enterprise_bin.stat.exists or
+      enterprise_upgrade | default(false)
+
+- name: Untar Splunk package (fast extraction with pigz)
+  ansible.builtin.shell: |
+    set -o pipefail
+    tar -xf "{{ item.path }}" -C "{{ splunk_path }}" --strip-components=1 --use-compress-program="pigz -p{{ ansible_processor_vcpus | default(1) }}"
+  register: splunk_tar_extraction
+  loop: "{{ find_splunk_tgz.files }}"
+  args:
+    executable: /bin/bash
+  changed_when: splunk_tar_extraction.rc == 0
+  failed_when: splunk_tar_extraction.rc != 0
+  when:
+    - not stat_splunk_enterprise_bin.stat.exists or
+      enterprise_upgrade | default(false)
+    - pigz_check.rc == 0
+  tags:
+    - skip_ansible_lint
+
+- name: Fallback to standard archive if pigz is not available
+  ansible.builtin.unarchive:
+    src: "{{ item.path }}"
+    dest: "{{ splunk_path }}"
+    remote_src: true
+    extra_opts: [--strip-components=1]
+  register: splunk_tar_extraction_fallback
+  loop: "{{ find_splunk_tgz.files }}"
+  when:
+    - not stat_splunk_enterprise_bin.stat.exists or
+      enterprise_upgrade | default(false)
+    - pigz_check.rc != 0
+
+- name: Verify Splunk extraction was successful
+  ansible.builtin.stat:
+    path: "{{ splunk_path }}/bin/splunk"
+  register: verify_splunk_bin
+  when:
+    - not stat_splunk_enterprise_bin.stat.exists or
+      enterprise_upgrade | default(false)
+
+- name: Fail if Splunk extraction failed
+  ansible.builtin.fail:
+    msg: "Splunk extraction failed. Expected binary not found at {{ splunk_path }}/bin/splunk"
+  when:
+    - not stat_splunk_enterprise_bin.stat.exists or
+      enterprise_upgrade | default(false)
+    - not verify_splunk_bin.stat.exists
+
+- name: Include task to get Splunk status
+  ansible.builtin.include_tasks: splunk_status.yml
+  when:
+    - stat_splunk_enterprise_bin.stat.exists
+    - not enterprise_upgrade | default(false)
+
+- name: Create directory used by notify handler before splunk is started
+  ansible.builtin.file:
+    path: "{{ splunk_path }}/var/run"
+    state: directory
+    mode: '775'
+  when:
+    - not stat_splunk_enterprise_bin.stat.exists
+
+- name: Create directory used by cca to store state files
+  ansible.builtin.file:
+    path: "{{ splunk_path }}/.cca"
+    state: directory
+    mode: '755'
+
+- name: If an Splunk <= 9.3 upgrade is performed, cleanup files from older versions
+  ansible.builtin.command:
+    cmd: >
+      {{ cca_splunk_var_tmp }}/bin/splunk_upgrade_cleanup.sh
+      {{ cca_splunk_var_tmp }}/dat/untracked_files_splunk_{{ splunk_enterprise_version }}_Linux.diff
+      {{ splunk_path }}
+  when:
+    - (splunk_tar_extraction.changed or splunk_tar_extraction_fallback.changed)
+    - enterprise_upgrade | default(false)
+    - splunk_enterprise_version is version('9.4.0', '<')
+  tags:
+    - skip_ansible_lint
+
+- name: If an Splunk 9.4+ upgrade is performed, cleanup files from older versions
+  ansible.builtin.command:
+    cmd: >
+      {{ cca_splunk_var_tmp }}/bin/splunk_upgrade_cleanup.sh
+      {{ cca_splunk_var_tmp }}/dat/untracked_files_splunk_{{ splunk_enterprise_version }}_linux.diff
+      {{ splunk_path }}
+  when:
+    - (splunk_tar_extraction.changed or splunk_tar_extraction_fallback.changed)
+    - enterprise_upgrade | default(false)
+    - splunk_enterprise_version is version('9.4.0', '>=')
+  tags:
+    - skip_ansible_lint
+
+- name: Start splunk from command line
+  ansible.builtin.command:
+    cmd: '{{ start_command }}'
+  when:
+    - stat_splunk_enterprise_bin.stat.exists
+  tags:
+    - skip_ansible_lint
+
+- name: Wait until Splunk is started
+  ansible.builtin.command:
+    cmd: "timeout 30 {{ splunk_path }}/bin/splunk status"
+  register: splunk_status_result
+  until: splunk_status_result.stdout | regex_search('splunkd is running')
+  retries: "{{ cca_splunkd_status_retries | default(30) | int }}"
+  delay: 10
+  check_mode: false
+  changed_when: false
+  when:
+    - stat_splunk_enterprise_bin.stat.exists
+  tags:
+    - skip_ansible_lint
+
+- name: Include task to check kvstore upgrade status
+  ansible.builtin.include_tasks: kvstore_upgrade_status.yml
+  when:
+    - stat_splunk_enterprise_bin.stat.exists
+    - inventory_hostname not in ( groups.searchhead_members | default([]) ) or
+      check_kvstore_upgrade_status | default(false)
+
+- name: Include role to update splunk version
+  ansible.builtin.include_role:
+    name: deslicer.splunk.core
+    tasks_from:
+      get_splunk_version.yml
+  when:
+    - stat_splunk_enterprise_bin.stat.exists
+    - (splunk_tar_extraction.changed or splunk_tar_extraction_fallback.changed)

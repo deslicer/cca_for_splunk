@@ -1,0 +1,17 @@
+---
+# tasks file for deslicer.splunk.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Robin Blomdahl
+#
+# Release: 2024.2.2
+
+- name: Enable and make sure Chrony is started
+  ansible.builtin.systemd:
+    name: "chronyd.service"
+    enabled: true
+    state: "started"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"

@@ -1,0 +1,149 @@
+# Playbook to handle Non Clustered Splunk Servers
+#
+# REPO_TYPE=infrastructure
+# MENU_DESC=Manage Non Clustered Splunk Servers
+# EXTRA_VARS=hide_password(true)
+
+- name: Verify that connection to all servers are ok before we start
+  hosts: non_clustered_splunk_servers
+  become: true
+  become_method: ansible.builtin.sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  strategy: linear
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
+        name: deslicer.splunk.core
+        tasks_from:
+          wait_for_connection.yml
+
+
+- name: Configure the non_clustered_splunk_servers for availability group 1
+  hosts: non_clustered_splunk_servers:&ag1
+  become: true
+  become_method: ansible.builtin.sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Gather only network facts
+      ansible.builtin.setup:
+        gather_subset: 'network'
+
+  tasks:
+    - name: Ensure Splunk is installed
+      ansible.builtin.include_role:
+        name: deslicer.splunk.enterprise
+
+    - name: Manage Splunk conf settings
+      ansible.builtin.include_role:
+        name: deslicer.splunk.core
+      when:
+        - not deslicer_automation_platform | default(false)
+
+  post_tasks:
+    - name: Check if there is any pending actions
+      ansible.builtin.include_role:
+        name: deslicer.splunk.core
+        tasks_from:
+          check_pending_actions.yml
+
+    - name: Restart splunkd if needed
+      ansible.builtin.include_role:
+        name: deslicer.splunk.core
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists
+
+
+- name: Configure the non clustered splunk servers for availability group 2
+  hosts: non_clustered_splunk_servers:&ag2
+  become: true
+  become_method: ansible.builtin.sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Gather only network facts
+      ansible.builtin.setup:
+        gather_subset: 'network'
+
+    - name: Debug all vars
+      ansible.builtin.debug:
+        msg: '{{ hostvars[inventory_hostname] }}'
+      when:
+        debug | default(false)
+
+  tasks:
+    - name: Ensure Splunk is installed
+      ansible.builtin.include_role:
+        name: deslicer.splunk.enterprise
+
+    - name: Manage Splunk conf settings
+      ansible.builtin.include_role:
+        name: deslicer.splunk.core
+      when:
+        - not deslicer_automation_platform | default(false)
+
+  post_tasks:
+    - name: Check if there is any pending actions
+      ansible.builtin.include_role:
+        name: deslicer.splunk.core
+        tasks_from:
+          check_pending_actions.yml
+
+    - name: Restart splunkd if needed
+      ansible.builtin.include_role:
+        name: deslicer.splunk.core
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists
+
+
+- name: Configure the non_clustered_splunk_servers for availability group 3
+  hosts: non_clustered_splunk_servers:&ag3
+  become: true
+  become_method: ansible.builtin.sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Gather only network facts
+      ansible.builtin.setup:
+        gather_subset: 'network'
+
+    - name: Debug all vars
+      ansible.builtin.debug:
+        msg: '{{ hostvars[inventory_hostname] }}'
+      when:
+        debug | default(false)
+
+  tasks:
+    - name: Ensure Splunk is installed
+      ansible.builtin.include_role:
+        name: deslicer.splunk.enterprise
+
+    - name: Manage Splunk conf settings
+      ansible.builtin.include_role:
+        name: deslicer.splunk.core
+      when:
+        - not deslicer_automation_platform | default(false)
+
+  post_tasks:
+    - name: Check if there is any pending actions
+      ansible.builtin.include_role:
+        name: deslicer.splunk.core
+        tasks_from:
+          check_pending_actions.yml
+
+    - name: Restart splunkd if needed
+      ansible.builtin.include_role:
+        name: deslicer.splunk.core
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists

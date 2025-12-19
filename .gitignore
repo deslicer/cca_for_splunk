@@ -21,3 +21,5 @@
 __pycache__
 dry_run_results.txt
 
+*.tgz
+*.tar.gz
