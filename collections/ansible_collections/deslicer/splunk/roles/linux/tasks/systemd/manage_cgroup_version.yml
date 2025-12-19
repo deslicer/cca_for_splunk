@@ -11,7 +11,7 @@
 
 - name: Get Splunk Enterprise version
   ansible.builtin.include_role:
-    name: deslicer.splunk.linux
+    name: deslicer.splunk.core
     tasks_from: get_splunk_version.yml
 
 - name: Get running cgroup version
