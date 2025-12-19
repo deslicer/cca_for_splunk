@@ -8,6 +8,7 @@
 # Author: Roger Lindquist (github.com/rlinq)
 #
 # Release: 2022.2.1
+
 - name: Configure user profile
   ansible.builtin.template:
     src: user_profile/dot.profile.j2

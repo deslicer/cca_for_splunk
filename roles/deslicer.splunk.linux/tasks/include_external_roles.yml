@@ -8,6 +8,7 @@
 # Author: Roger Lindquist (github.com/rlinq)
 #
 # Release: 2022.2.1
+
 - name: Include and run tasks from external bootstrap roles
   ansible.builtin.include_role:
     name: '{{ external_bootstrap_role }}'

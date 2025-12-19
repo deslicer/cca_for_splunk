@@ -8,6 +8,7 @@
 # Author: Roger Lindquist (github.com/rlinq)
 #
 # Release: 2022.2.1
+
 - name: Ensure that the local cca splunk manager user is added to sudoers
   ansible.builtin.copy:
     dest: "/etc/sudoers.d/{{ cca_splunk_manager_user }}"
