@@ -1,13 +1,13 @@
 ---
-# tasks file for cca.splunk.enterprise-install
+# tasks file for deslicer.splunk.enterprise-install
 #
 # Description:
 #
 # Prerequisite:
 #
-# Author: Roger Lindquist (github.com/rlinq)
+# Author: Roger Lindquist (github.com/deslicer)
 #
-# Release: 2025.2.1
+# Release: 1.0.0
 
 - name: Check if Splunk is installed
   ansible.builtin.stat:
@@ -24,16 +24,6 @@
     cca_ansible_managed: true
   when:
     - stat_ansible_managed.stat.exists
-
-- name: Include task to handle unmanaged servers
-  ansible.builtin.include_tasks: prompt_unmanaged.yml
-  when:
-    - stat_splunk_enterprise_bin.stat.exists
-    - not stat_ansible_managed.stat.exists
-    - not accept_cca_management | default(false)
-    - not cca_splunk_enterprise_upgrade | default(false)
-    - not ensure_splunk_version_task | default(false)
-    - not ansible_check_mode
 
 - name: Check if Systemd service exists
   ansible.builtin.stat:

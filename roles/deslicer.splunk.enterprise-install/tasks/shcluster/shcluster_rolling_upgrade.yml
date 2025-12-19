@@ -1,17 +1,17 @@
 ---
-# tasks file for cca.splunk.enterprise-install
+# tasks file for deslicer.splunk.enterprise-install
 #
 # Description:
 #
 # Prerequisite:
 #
-# Author: Roger Lindquist (github.com/rlinq)
+# Author: Roger Lindquist (github.com/deslicer)
 #
-# Release: 2025.2.1
+# Release: 1.0.0
 
 - name: Login to splunk
   ansible.builtin.include_role:
-    name: cca.core.splunk
+    name: deslicer.splunk.core
     tasks_from: splunk_login.yml
 
 - name: Set a search head cluster member in manual detention
@@ -65,7 +65,7 @@
 
 - name: Login to splunk
   ansible.builtin.include_role:
-    name: cca.core.splunk
+    name: deslicer.splunk.core
     tasks_from: splunk_login.yml
 
 - name: Turn off manual detention for search head cluster member

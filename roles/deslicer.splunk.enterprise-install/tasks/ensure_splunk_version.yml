@@ -1,5 +1,5 @@
 ---
-# tasks file for cca.splunk.enterprise-install
+# tasks file for deslicer.splunk.enterprise-install
 #
 # Description:
 #
@@ -182,7 +182,7 @@
 
 - name: Include role to update splunk version
   ansible.builtin.include_role:
-    name: cca.core.splunk
+    name: deslicer.splunk.core
     tasks_from:
       get_splunk_version.yml
   when:

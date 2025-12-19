@@ -1,16 +1,18 @@
 ---
-# tasks file for cca.splunk.enterprise-install
+# tasks file for deslicer.splunk.enterprise-install
 #
 # Description:
 #
 # Prerequisite:
 #
-# Author: Roger Lindquist (github.com/rlinq)
+# Author: Roger Lindquist (github.com/deslicer)
 #
-# Release: 2022.2.1
+# Release: 1.0.0
 
 - name: Include tasks to login to Splunk
-  ansible.builtin.include_tasks: ../cca.core.splunk/tasks/splunk_login.yml
+  ansible.builtin.include_role:
+    name: deslicer.splunk.core
+    tasks_from: splunk_login.yml
 
 - name: Initialize rolling upgrade on cluster manager
   ansible.builtin.command:
