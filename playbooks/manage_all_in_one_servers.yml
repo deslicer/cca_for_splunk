@@ -30,7 +30,7 @@
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           wait_for_connection.yml
 
@@ -76,7 +76,7 @@
 
     - name: Manage Splunk conf settings
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
 
     - name: Manage settings for the Splunk user profile
       ansible.builtin.include_role:
@@ -87,13 +87,13 @@
   post_tasks:
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           check_pending_actions.yml
 
     - name: Restart splunkd if needed
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           restart_splunkd.yml
       when:

@@ -32,7 +32,7 @@
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           wait_for_connection.yml
 
@@ -50,7 +50,7 @@
     # Not used in standard deployments
     - name: Get serverclass state
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           deployment_server/get_serverclass_state.yml
       when: use_serverclass_mode | default(false)
@@ -71,7 +71,7 @@
 
     - name: Map deployment apps updates to serverclass data
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           deployment_server/get_serverclass_map_of_deployment_apps.yml
       when: use_serverclass_mode | default(false)
@@ -100,7 +100,7 @@
   post_tasks:
     - name: Reload deployment server
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           reload_deployment_server.yml
 

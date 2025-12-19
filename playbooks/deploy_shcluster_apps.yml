@@ -59,13 +59,13 @@
 
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           check_pending_actions.yml
 
     - name: Restart splunkd if needed
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           restart_splunkd.yml
       when:
@@ -74,7 +74,7 @@
   post_tasks:
     - name: Include apply shcluster bundle role
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           apply_shcluster_bundle.yml
 

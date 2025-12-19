@@ -59,7 +59,7 @@
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           wait_for_connection.yml
 
@@ -90,7 +90,7 @@
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           wait_for_connection.yml
 
@@ -100,13 +100,13 @@
 
     - name: Include role to store current splunk version
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           get_splunk_version.yml
 
     - name: Include role to get search head cluster status
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           shcluster/get_shcluster_status.yml
       when:
@@ -115,7 +115,7 @@
 
     - name: Include role to precheck upgrade status on search head members
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           shcluster/precheck_upgrade_status.yml
       when:
@@ -124,7 +124,7 @@
 
     - name: Include role to get cluster status
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           cluster/get_cluster_status.yml
       when:
@@ -133,7 +133,7 @@
 
     - name: Include role to precheck upgrade status on cluster managers
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           cluster/precheck_upgrade_status.yml
       when:
@@ -142,7 +142,7 @@
 
     - name: Include role to get splunk status
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           get_splunk_status.yml
       when:
@@ -151,7 +151,7 @@
 
     - name: Include role to precheck upgrade status non peers and members
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           precheck_upgrade_status.yml
       when:
@@ -176,7 +176,7 @@
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           wait_for_connection.yml
 
@@ -213,7 +213,7 @@
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           wait_for_connection.yml
 
@@ -269,7 +269,7 @@
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           wait_for_connection.yml
 
@@ -294,7 +294,7 @@
   pre_tasks:
     - name: Include role to get search head cluster status
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           shcluster/get_shcluster_status.yml
 
@@ -414,7 +414,7 @@
   pre_tasks:
     - name: Include role to offline splunk on cluster peers C1 AG1
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           cluster/splunk_offline.yml
 
@@ -438,7 +438,7 @@
   pre_tasks:
     - name: Include role to offline splunk on cluster peers C1 AG2
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           cluster/splunk_offline.yml
 
@@ -462,7 +462,7 @@
   pre_tasks:
     - name: Include role to offline splunk on cluster peers C1 AG3
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           cluster/splunk_offline.yml
 

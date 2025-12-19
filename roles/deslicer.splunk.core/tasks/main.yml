@@ -1,0 +1,122 @@
+---
+# tasks file for deslicer.splunk.core
+#
+# Description:
+#   The data-model handles everything that comes around settings parameters for
+#   Splunk instances based on their role. A Splunk role is mapped to an inventory
+#   group in Ansible.
+#   Functions for creating, updating and deleting sections, options and values
+#   in ini_file is implemented. Splunk .conf files is perfect for the ini_file
+#   module as it can configure settings with the concept of atomic precision.
+#
+# Prerequisite:
+#
+# Roger Lindquist (github.com/rlinq)
+#
+# Release: 2023.3.2
+
+- name: Include task for checking cca_for_splunk init state
+  ansible.builtin.include_tasks: check_init.yml
+
+- name: Include task for checking splunk.secret
+  ansible.builtin.include_tasks: check_splunk_secret.yml
+
+- name: Include task ensuring local admin user
+  ansible.builtin.include_tasks: local_users.yml
+
+- name: Include task for checking certificate status
+  ansible.builtin.include_role:
+    name: cca.splunk.ssl-certificates
+    tasks_from: validate_target_certificates
+
+- name: Include task to calculate splunk enterprise version
+  ansible.builtin.include_tasks: get_splunk_version.yml
+
+- name: Run a precheck of the config to find errors
+  ansible.builtin.include_tasks: precheck_settings.yml
+
+- name: Include task for splunk general settings
+  ansible.builtin.include_tasks: set_splunk_general_settings.yml
+  when:
+    - splunk_conf_general_settings_flattened is defined
+
+- name: Include task for splunk group settings
+  ansible.builtin.include_tasks: set_splunk_group_settings.yml
+  when:
+    - splunk_conf_group_settings_flattened is defined
+
+- name: Include task for splunk host settings
+  ansible.builtin.include_tasks: set_splunk_host_settings.yml
+  when:
+    - splunk_conf_host_settings_flattened is defined
+
+- name: Include task for adding Splunk license
+  ansible.builtin.include_tasks: add_license.yml
+  when:
+    - is_license_manager | default(false)
+
+- name: Include licensed CCA infrastructure tasks
+  ansible.builtin.include_role:
+    name: "{{ cca_control_infrastructure.role }}"
+    tasks_from:
+      "{{ cca_control_infrastructure.task }}"
+  loop_control:
+    loop_var: cca_control_infrastructure
+  loop: '{{ cca_control_infrastructure_tasks | default([]) if cca_control_infrastructure_tasks | default([]) is iterable else [] }}'
+
+- name: Restart Splunkd if splunk.secret is replaced
+  ansible.builtin.command:
+    cmd: "timeout {{ cca_splunk_command_timeout | default('120') }} {{ restart_command }}"
+  register: splunk_status_result
+  until: splunk_status_result.rc == 0
+  retries: "{{ cca_splunkd_restart_retries | default(5) | int }}"
+  delay: 10
+  when:
+    - result_splunk_secret_replace.changed
+  tags:
+    - skip_ansible_lint
+
+- name: Check for first time run
+  ansible.builtin.stat:
+    path: "{{ splunk_path }}/var/run/splunk"
+  register: stat_var_run_splunk
+
+- name: Ensure splunk is running on non searchhead members
+  ansible.builtin.command:
+    cmd: "timeout {{ cca_splunk_command_timeout | default('240') }} {{ start_command }}"
+  register: splunk_status_result
+  until: >
+    splunk_status_result.rc == 0 or
+    ('The splunk daemon (splunkd) is already running' in splunk_status_result.stdout)
+  retries: "{{ cca_splunkd_start_retries | default(5) | int }}"
+  delay: 10
+  changed_when: "'This appears to be your first time running this version of Splunk.' in splunk_status_result.stdout"
+  failed_when: >
+    splunk_status_result.rc != 0 and
+    ('The splunk daemon (splunkd) is already running' not in splunk_status_result.stdout)
+  when:
+    - inventory_hostname not in  ( groups.searchhead_members | default([]) )
+
+- name: Wait for a rolling restart on search head cluster to complete
+  ansible.builtin.import_role:
+    name: cca.splunk.role-searchhead
+    tasks_from: wait_for_shcluster.yml
+  when:
+    - inventory_hostname in ( groups.searchhead_members | default([]) )
+    - stat_var_run_splunk.stat.exists
+
+- name: Ensure splunk is running on searchhead members
+  ansible.builtin.command:
+    cmd: "timeout {{ cca_splunk_command_timeout | default('240') }} {{ start_command }}"
+  register: splunk_status_result
+  until: >
+    splunk_status_result.rc == 0 or
+    ('The splunk daemon (splunkd) is already running' in splunk_status_result.stdout)
+  retries: "{{ cca_splunkd_start_retries | default(5) | int }}"
+  delay: 10
+  changed_when: "'This appears to be your first time running this version of Splunk.' in splunk_status_result.stdout"
+  failed_when: >
+    splunk_status_result.rc != 0 and
+    ('The splunk daemon (splunkd) is already running' not in splunk_status_result.stdout)
+  when:
+    - inventory_hostname in ( groups.searchhead_members | default([]) )

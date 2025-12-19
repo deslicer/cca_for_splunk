@@ -36,7 +36,7 @@
 
     - name: Include role to store current splunk version
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           get_splunk_version.yml
 
@@ -72,7 +72,7 @@
   pre_tasks:
     - name: Include role to get splunk status - AG1
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           get_splunk_status.yml
 
@@ -100,7 +100,7 @@
   pre_tasks:
     - name: Include role to get splunk status - AG2
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           get_splunk_status.yml
 
@@ -127,7 +127,7 @@
   pre_tasks:
     - name: Include role to get splunk status - AG3
       ansible.builtin.include_role:
-        name: cca.core.splunk
+        name: deslicer.splunk.core
         tasks_from:
           get_splunk_status.yml
 

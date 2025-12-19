@@ -1,0 +1,69 @@
+---
+# tasks file for deslicer.splunk.core
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.2.1
+
+
+- name: Add admin user as local cli user
+  ansible.builtin.lineinfile:
+    path: '{{ splunk_path }}/etc/passwd'
+    regex: '^:{{ cca_splunk_admin_user }}:'
+    line: >-
+      :{{ cca_splunk_admin_user }}:{{ cca_splunk_admin_password_hash }}
+      {#- -#}
+      ::Local Administrator Account:admin
+      {#- -#}
+      :{{ cca_splunk_admin_email | default('noreply@localhost') }}
+      {#- -#}
+      :::18956
+    mode: '0600'
+    create: true
+  notify: notify splunkd restart
+  tags:
+    - skip_ansible_lint
+
+- name: Core Control - Manage additional local users to Splunk
+  ansible.builtin.lineinfile:
+    path: '{{ splunk_path }}/etc/passwd'
+    regex: '^:{{ user.name }}:'
+    line: ':{{ user.name }}:{{ user.passwd_hash }}::{{ user.description }}:{{ user.role }}:{{ user.email }}:::{{ user.id }}'
+  loop_control:
+    loop_var: user
+  loop: '{{ cca_splunk_local_users | default([]) | selectattr("state", "undefined") | list + cca_splunk_local_users | default([]) | selectattr("state", "defined") | selectattr("state", "eq", "present") | list }}'
+  notify: notify splunkd restart
+
+- name: Core Control - Remove local users from Splunk
+  ansible.builtin.lineinfile:
+    path: '{{ splunk_path }}/etc/passwd'
+    regex: '^:{{ user.name }}:'
+    state: absent
+  loop_control:
+    loop_var: user
+  loop: '{{ cca_splunk_local_users | default([]) | selectattr("state", "defined") | selectattr("state", "eq", "absent") | list }}'
+  notify: notify splunkd restart
+
+- name: Group Vars - Manage additional local users to Splunk
+  ansible.builtin.lineinfile:
+    path: '{{ splunk_path }}/etc/passwd'
+    regex: '^:{{ user.name }}:'
+    line: ':{{ user.name }}:{{ user.passwd_hash }}::{{ user.description }}:{{ user.role }}:{{ user.email }}:::{{ user.id }}'
+  loop_control:
+    loop_var: user
+  loop: '{{ cca_splunk_local_users_group_settings | default([]) | selectattr("state", "undefined") | list + cca_splunk_local_users_group_settings | default([]) | selectattr("state", "defined") | selectattr("state", "eq", "present") | list }}'
+  notify: notify splunkd restart
+
+- name: Group Vars - Remove local users from Splunk
+  ansible.builtin.lineinfile:
+    path: '{{ splunk_path }}/etc/passwd'
+    regex: '^:{{ user.name }}:'
+    state: absent
+  loop_control:
+    loop_var: user
+  loop: '{{ cca_splunk_local_users_group_settings | default([]) | selectattr("state", "defined") | selectattr("state", "eq", "absent") | list }}'
+  notify: notify splunkd restart
