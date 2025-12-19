@@ -7,7 +7,7 @@
 #
 # Authors: Roger Lindquist (github.com/rlinq), Saikrishna Gundeti (github.com/sgundeti)
 #
-# Release: 2025.3.1
+# Release: 0.1.4
 
 # Configure systemd service to disable THP (reliable across all systemd-based distributions)
 - name: Configure systemd service to disable THP
@@ -19,6 +19,7 @@
     cmd: cat /sys/kernel/mm/transparent_hugepage/enabled
   register: final_thp_check
   changed_when: false
+  check_mode: false
 
 - name: Fail if THP is still enabled after all configuration attempts
   ansible.builtin.fail:

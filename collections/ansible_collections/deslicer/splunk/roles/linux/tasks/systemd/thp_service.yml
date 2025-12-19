@@ -7,7 +7,7 @@
 #
 # Author: Saikrishna Gundeti (github.com/sgundeti)
 #
-# Release: 2025.3.1
+# Release: 0.1.4
 
 - name: Configure THP disable service in /etc/systemd/system/disable-thp.service
   ansible.builtin.template:
@@ -33,6 +33,7 @@
   register: thp_status_after_service
   ignore_errors: true
   changed_when: false
+  check_mode: false
 
 - name: Verify THP is disabled by systemd service
   ansible.builtin.fail:
