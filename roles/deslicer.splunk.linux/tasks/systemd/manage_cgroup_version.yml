@@ -1,5 +1,5 @@
 ---
-# tasks file for cca.core.linux
+# tasks file for deslicer.splunk.core
 #
 # Description:
 #
@@ -11,7 +11,7 @@
 
 - name: Get Splunk Enterprise version
   ansible.builtin.include_role:
-    name: cca.core.splunk
+    name: deslicer.splunk.core
     tasks_from: get_splunk_version.yml
 
 - name: Get running cgroup version

@@ -1,5 +1,5 @@
 ---
-# handlers file for cca.core.linux
+# handlers file for deslicer.splunk.core
 #
 - name: Server reboot notification handler
   become: true

@@ -18,9 +18,9 @@
         tasks_from:
           wait_for_connection.yml
 
-    - name: Include role for cca.core.linux
+    - name: Include role for deslicer.splunk.core
       ansible.builtin.include_role:
-        name: cca.core.linux
+        name: deslicer.splunk.core
 
 - name: Reboot servers in availability group 1
   hosts: splunk_servers:&ag1:!localhost
@@ -29,7 +29,7 @@
   pre_tasks:
     - name: Include task for reboot handler
       ansible.builtin.include_role:
-        name: cca.core.linux
+        name: deslicer.splunk.core
         tasks_from: server_reboot_handler.yml
 
 - name: Reboot servers in availability group 2
@@ -39,7 +39,7 @@
   pre_tasks:
     - name: Include task for reboot handler
       ansible.builtin.include_role:
-        name: cca.core.linux
+        name: deslicer.splunk.core
         tasks_from: server_reboot_handler.yml
 
 - name: Reboot servers in availability group 3
@@ -49,5 +49,5 @@
   pre_tasks:
     - name: Include task for reboot handler
       ansible.builtin.include_role:
-        name: cca.core.linux
+        name: deslicer.splunk.core
         tasks_from: server_reboot_handler.yml

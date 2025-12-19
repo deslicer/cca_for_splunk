@@ -109,7 +109,7 @@
 
     - name: Validate available disk space for os update
       ansible.builtin.include_role:
-        name: cca.core.linux
+        name: deslicer.splunk.core
         tasks_from:
           validate_available_disk_space.yml
 
@@ -140,13 +140,13 @@
 
     - name: Get host facts
       ansible.builtin.include_role:
-        name: cca.core.linux
+        name: deslicer.splunk.core
         tasks_from:
           get_facts.yml
 
     - name: Validate and get version specific variables
       ansible.builtin.include_role:
-        name: cca.core.linux
+        name: deslicer.splunk.core
         tasks_from:
           validate_supported_os_versions.yml
 
@@ -156,14 +156,14 @@
       block:
         - name: Set reboot flag
           ansible.builtin.include_role:
-            name: cca.core.linux
+            name: deslicer.splunk.core
             tasks_from: set_reboot_flag.yml
           when:
             - force_reboot | default(false)
 
         - name: Check if an package update is needed
           ansible.builtin.include_role:
-            name: cca.core.linux
+            name: deslicer.splunk.core
             tasks_from:
               "update/{{ package_manager }}/check_for_os_updates.yml"
           when:
@@ -171,7 +171,7 @@
 
         - name: Execute linux configuration tasks
           ansible.builtin.include_role:
-            name: cca.core.linux
+            name: deslicer.splunk.core
           when:
             - config_update | default(false)
 
@@ -180,7 +180,7 @@
 
         - name: Check pending changes
           ansible.builtin.include_role:
-            name: cca.core.linux
+            name: deslicer.splunk.core
             tasks_from:
               check_pending_actions.yml
 
@@ -207,7 +207,7 @@
       block:
         - name: Update OS Packages
           ansible.builtin.include_role:
-            name: cca.core.linux
+            name: deslicer.splunk.core
             tasks_from:
               "update/{{ package_manager }}/os_update.yml"
           when:
@@ -215,7 +215,7 @@
 
         - name: Reboot if needed
           ansible.builtin.include_role:
-            name: cca.core.linux
+            name: deslicer.splunk.core
             tasks_from: server_reboot_handler.yml
           when:
             - kernel_update_needed | default(false) or
@@ -271,13 +271,13 @@
 
     - name: Get host facts
       ansible.builtin.include_role:
-        name: cca.core.linux
+        name: deslicer.splunk.core
         tasks_from:
           get_facts.yml
 
     - name: Validate and get version specific variables
       ansible.builtin.include_role:
-        name: cca.core.linux
+        name: deslicer.splunk.core
         tasks_from:
           validate_supported_os_versions.yml
 
@@ -287,14 +287,14 @@
       block:
         - name: Set reboot flag
           ansible.builtin.include_role:
-            name: cca.core.linux
+            name: deslicer.splunk.core
             tasks_from: set_reboot_flag.yml
           when:
             - force_reboot | default(false)
 
         - name: Check if an package update is needed
           ansible.builtin.include_role:
-            name: cca.core.linux
+            name: deslicer.splunk.core
             tasks_from:
               "update/{{ package_manager }}/check_for_os_updates.yml"
           when:
@@ -302,7 +302,7 @@
 
         - name: Execute linux configuration tasks
           ansible.builtin.include_role:
-            name: cca.core.linux
+            name: deslicer.splunk.core
           when:
             - config_update | default(false)
 
@@ -311,7 +311,7 @@
 
         - name: Check pending changes
           ansible.builtin.include_role:
-            name: cca.core.linux
+            name: deslicer.splunk.core
             tasks_from:
               check_pending_actions.yml
 
@@ -338,7 +338,7 @@
       block:
         - name: Update OS Packages
           ansible.builtin.include_role:
-            name: cca.core.linux
+            name: deslicer.splunk.core
             tasks_from:
               "update/{{ package_manager }}/os_update.yml"
           when:
@@ -346,7 +346,7 @@
 
         - name: Reboot if needed
           ansible.builtin.include_role:
-            name: cca.core.linux
+            name: deslicer.splunk.core
             tasks_from: server_reboot_handler.yml
           when:
             - kernel_update_needed | default(false) or

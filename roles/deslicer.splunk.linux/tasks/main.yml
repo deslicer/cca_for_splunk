@@ -1,5 +1,5 @@
 ---
-# tasks file for cca.core.linux
+# tasks file for deslicer.splunk.core
 #
 # Description:
 #   The enterprise-bootstrap makes all necessary configurations that is needed
@@ -72,7 +72,7 @@
 
 - name: Get splunk version
   ansible.builtin.include_role:
-    name: cca.core.splunk
+    name: deslicer.splunk.core
     tasks_from: get_splunk_version
   when:
     - control.linux_configuration.splunk_version | default(true)

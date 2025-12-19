@@ -1,5 +1,5 @@
 ---
-# tasks file for cca.core.linux
+# tasks file for deslicer.splunk.core
 #
 # Description:
 #
@@ -35,7 +35,7 @@
 
 - name: Get pending actions
   ansible.builtin.include_role:
-    name: cca.core.linux
+    name: deslicer.splunk.core
     tasks_from: check_pending_actions.yml
 
 - name: End play for this host due to this reason

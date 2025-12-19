@@ -145,7 +145,19 @@ Dependencies
 ------------
 None
 
-License
--------
+## License and Attribution
 
-MIT
+This role is derived from [cca_for_splunk](https://github.com/innovationfleet/cca_for_splunk),
+originally developed by Innovation Fleet.
+
+**Original License:** MIT License - Copyright (c) 2024 Innovation Fleet
+
+This role has been adapted for use with the Deslicer Automation Platform by Deslicer AB.
+Modifications include:
+- Role names updated for Ansible Galaxy collection compatibility
+- Integration with Deslicer API for file distribution
+
+This software remains licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+**Copyright (c) 2024 Innovation Fleet**
+**Modifications Copyright (c) 2026 Deslicer AB**
