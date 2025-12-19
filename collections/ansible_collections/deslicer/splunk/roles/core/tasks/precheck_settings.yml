@@ -26,21 +26,21 @@
 
 - name: Ensure general settings are in the expected format
   ansible.builtin.set_fact:
-    splunk_conf_general_settings_flattened: "{{ splunk_conf_general_settings | default([]) | splunk_conf_flatten }}"
+    splunk_conf_general_settings_flattened: "{{ splunk_conf_general_settings | default([]) | deslicer.splunk.splunk_conf_flatten }}"
   when:
     - splunk_conf_general_settings_flattened is not defined
   no_log: "{{ hide_password }}"
 
 - name: Ensure group settings are in the expected format
   ansible.builtin.set_fact:
-    splunk_conf_group_settings_flattened: "{{ splunk_conf_group_settings | default([]) | splunk_conf_flatten }}"
+    splunk_conf_group_settings_flattened: "{{ splunk_conf_group_settings | default([]) | deslicer.splunk.splunk_conf_flatten }}"
   when:
     - splunk_conf_group_settings_flattened is not defined
   no_log: "{{ hide_password }}"
 
 - name: Ensure host settings are in the expected format
   ansible.builtin.set_fact:
-    splunk_conf_host_settings_flattened: "{{ splunk_conf_host_settings | default([]) | splunk_conf_flatten }}"
+    splunk_conf_host_settings_flattened: "{{ splunk_conf_host_settings | default([]) | deslicer.splunk.splunk_conf_flatten }}"
   when:
     - splunk_conf_host_settings_flattened is not defined
   no_log: "{{ hide_password }}"
