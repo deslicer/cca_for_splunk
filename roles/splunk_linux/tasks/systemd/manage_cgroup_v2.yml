@@ -1,0 +1,68 @@
+---
+# tasks file for deslicer.splunk_linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.3.2
+
+- name: Stop cgroup_daemon service and disable it
+  ansible.builtin.systemd:
+    name: cca_cgroup_version_daemon.service
+    state: stopped
+    enabled: false
+  register: stop_cgroup_v2_daemon_result
+  when:
+    - ansible_facts.services['cca_cgroup_version_daemon.service'] is defined
+  failed_when: >
+    stop_cgroup_v2_daemon_result.failed and
+    'Could not find the requested service' not in (stop_cgroup_v2_daemon_result.msg | default(''))
+
+- name: Remove cgroup-daemon service from /etc/systemd/system/cca_cgroup_version_daemon.service
+  ansible.builtin.file:
+    path: "/etc/systemd/system/cca_cgroup_version_daemon.service"
+    state: absent
+
+- name: Restore cgroup v2 setting in /etc/default/grub (Debian-based systems)
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^(GRUB_CMDLINE_LINUX=".*)(\s*systemd.unified_cgroup_hierarchy=0)(.*)"$'
+    line: '\1\3"'
+    backrefs: true
+  register: debian_grub_revert_status
+  notify: notify server reboot
+  when:
+    - ansible_distribution in ['Debian', 'Ubuntu']
+    - running_kernel_cgroup_version == 'cgroupv1'
+    - supported_kernel_cgroup_version == 'cgroupv2'
+
+- name: Update grub after reverting cgroup setting (Debian-based systems)
+  ansible.builtin.command: update-grub
+  when:
+    - ansible_distribution in ['Debian', 'Ubuntu']
+    - debian_grub_revert_status.changed
+  tags:
+    - skip_ansible_lint
+
+- name: Restore cgroup v2 setting with grubby (non-Debian systems)
+  ansible.builtin.command: >
+    grubby --update-kernel=ALL --remove-args="systemd.unified_cgroup_hierarchy=0"
+  register: grubby_kernel_revert_status
+  notify: notify server reboot
+  when:
+    - ansible_distribution not in ['Debian', 'Ubuntu']
+    - running_kernel_cgroup_version == 'cgroupv1'
+    - supported_kernel_cgroup_version == 'cgroupv2'
+  tags:
+    - skip_ansible_lint
+
+- name: Include role to configure splunk service
+  ansible.builtin.include_tasks: systemd/splunkd_service.yml
+  vars:
+    configure_cgroup_version: cgroupv2
+
+- name: Trigger restart if pending from cgroups update
+  ansible.builtin.meta: flush_handlers

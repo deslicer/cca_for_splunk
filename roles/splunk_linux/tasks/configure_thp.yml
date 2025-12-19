@@ -1,0 +1,32 @@
+---
+# tasks file for deslicer.splunk_linux
+#
+# Description: Configure Transparent Huge Pages (THP) to be disabled for Splunk performance
+#
+# Prerequisite: systemd-based Linux distribution
+#
+# Authors: Roger Lindquist (github.com/rlinq), Saikrishna Gundeti (github.com/sgundeti)
+#
+# Release: 2025.3.1
+
+# Configure systemd service to disable THP (reliable across all systemd-based distributions)
+- name: Configure systemd service to disable THP
+  ansible.builtin.include_tasks: systemd/thp_service.yml
+
+# Final verification that THP is disabled
+- name: Verify THP is disabled after configuration
+  ansible.builtin.command:
+    cmd: cat /sys/kernel/mm/transparent_hugepage/enabled
+  register: final_thp_check
+  changed_when: false
+
+- name: Fail if THP is still enabled after all configuration attempts
+  ansible.builtin.fail:
+    msg: |
+      Failed to disable Transparent Huge Pages (THP).
+      Current status: {{ final_thp_check.stdout }}
+      Expected: [never] or *[never]*
+      Please check system compatibility and permissions.
+  when:
+    - final_thp_check.rc == 0
+    - "'[never]' not in final_thp_check.stdout"

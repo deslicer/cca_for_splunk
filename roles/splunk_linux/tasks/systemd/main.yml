@@ -1,0 +1,13 @@
+---
+# tasks file for deslicer.splunk_linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Roger Lindquist (github.com/rlinq)
+# META_DATE
+# META_VERSION
+
+- name: Include tasks to handle cgroup versions
+  ansible.builtin.include_tasks: systemd/manage_cgroup_version.yml

@@ -1,0 +1,42 @@
+---
+# tasks file for deslicer.splunk_linux
+#
+# Description:
+#   The enterprise-bootstrap makes all necessary configurations that is needed
+#   to manage splunk as a non privileged user, set ulimits, create service
+#   files, install required packages and harden the server.
+#
+#   The task include_external_roles takes a list of additional roles that is
+#   needed, i.e. configure additional server parameters, disks, etc.
+#
+# Prerequisite:
+#   A filesystem needs to exist for Splunk Enterprise install path. Recommended
+#   is to keep the default /opt/splunk and configure it as own LVM.
+#
+# Roger Lindquist (github.com/rlinq)
+#
+# Release: 2024.2.2
+
+- name: Get facts for current distribution
+  ansible.builtin.setup:
+
+- name: Gather facts about configured services
+  ansible.builtin.service_facts:
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
+
+- name: Store splunk service status in a file
+  ansible.builtin.file:
+    state: touch
+    path: "{{ splunk_service_status | default('/var/tmp/splunkd_service_started') }}"
+    mode: '0644'
+  when:
+    - ansible_facts.services['Splunkd.service'] is defined
+    - ansible_facts.services['Splunkd.service']['state'] == 'running'
+  changed_when: false
+  check_mode: false
+
+- name: Load OS specific variables if found, else default
+  ansible.builtin.include_vars: '{{ item }}'
+  with_first_found:
+    - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'
+    - 'default.yml'

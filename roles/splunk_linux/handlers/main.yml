@@ -1,0 +1,45 @@
+---
+# handlers file for deslicer.splunk_linux
+#
+- name: Server reboot notification handler
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
+    path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
+    state: touch
+    mode: '0400'
+  listen: notify server reboot
+  check_mode: false
+
+- name: Restart the internal firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: restarted
+    enabled: true
+  listen: restart firewalld
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
+
+- name: Check if handler file exists (splunk service restart)
+  become: true
+  ansible.builtin.stat:
+    path: "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
+  register: splunk_restart_pending_stat
+  listen: notify restart splunkd service
+  check_mode: false
+  changed_when: false
+
+- name: Touch the file only if it does not already exist
+  become: true
+  ansible.builtin.file:
+    path: "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
+    state: touch
+    mode: '0400'
+  when: not splunk_restart_pending_stat.stat.exists
+  listen: notify restart splunkd service
+  check_mode: false
+  changed_when: false
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: true
+  listen: notify reload systemd daemon

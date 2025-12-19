@@ -1,0 +1,101 @@
+---
+# tasks file for deslicer.splunk_linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.3.2
+
+
+- name: Get dnf update status with releasever
+  ansible.builtin.dnf:
+    name: "{{ cca_control.package.updates.include_packages }}"
+    state: latest
+    exclude: "{{ cca_control.package.updates.exclude_packages }}"
+    releasever: "{{ cca_dnf_releasever }}"
+  register: dnf_update_status_releasever
+  when:
+    - cca_dnf_releasever is defined
+    - not use_shell_fallback | default(false)
+  tags:
+    - skip_ansible_lint
+
+- name: Get dnf update status with releasever (using shell fallback)
+  vars:
+    include_str: "{{ (cca_control.package.updates.include_packages | default([])) | map('quote') | join(' ') }}"
+    exclude_str: "{{ (cca_control.package.updates.exclude_packages | default([])) | join(',') }}"
+  ansible.builtin.shell: |
+    dnf update -y --releasever="{{ cca_dnf_releasever }}" {{ include_str }} --exclude="{{ exclude_str }}"
+  register: dnf_update_status_releasever
+  when:
+    - cca_dnf_releasever is defined
+    - use_shell_fallback | default(false)
+  changed_when: false
+  failed_when: >
+    not (
+      dnf_update_status_releasever.rc == 0 or
+      (dnf_update_status_releasever.rc == 1 and 'Operation aborted.' in (dnf_update_status_releasever.stderr | default('')))
+    )
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
+
+- name: Get dnf update status
+  ansible.builtin.dnf:
+    name: "{{ cca_control.package.updates.include_packages }}"
+    state: latest
+    exclude: "{{ cca_control.package.updates.exclude_packages }}"
+  register: dnf_update_status
+  when:
+    - cca_dnf_releasever is not defined
+    - not use_shell_fallback | default(false)
+  tags:
+    - skip_ansible_lint
+
+- name: Get dnf update status (using shell fallback)
+  vars:
+    include_str: "{{ (cca_control.package.updates.include_packages | default([])) | map('quote') | join(' ') }}"
+    exclude_str: "{{ (cca_control.package.updates.exclude_packages | default([])) | join(',') }}"
+  ansible.builtin.shell: |
+    dnf update -y {{ include_str }} --exclude="{{ exclude_str }}"
+  register: dnf_update_status
+  when:
+    - cca_dnf_releasever is not defined
+    - use_shell_fallback | default(false)
+  changed_when: false
+  failed_when: >
+    not (
+      dnf_update_status.rc == 0 or
+      (dnf_update_status.rc == 1 and 'Operation aborted.' in (dnf_update_status.stderr | default('')))
+    )
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
+
+- name: Set fact if kernel update is detected (dnf module)
+  ansible.builtin.set_fact:
+    kernel_update_needed: true
+  with_items:
+    - "{{ dnf_update_status_releasever.results | default('') | list }}"
+    - "{{ dnf_update_status.results | default('') | list }}"
+  check_mode: false
+  when:
+    - item | regex_search('kernel')
+    - not use_shell_fallback | default(false)
+
+- name: Set fact if kernel update is detected (shell fallback)
+  ansible.builtin.set_fact:
+    kernel_update_needed: true
+  when:
+    - (dnf_update_status_releasever.stdout is defined and (dnf_update_status_releasever.stdout | regex_search('kernel')))
+      or
+      (dnf_update_status.stdout is defined and (dnf_update_status.stdout | regex_search('kernel')))
+    - use_shell_fallback | default(false)
+  check_mode: false
+
+- name: Server reboot notification state
+  ansible.builtin.file:
+    path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
+    state: touch
+    mode: '0644'
+  when:
+    - kernel_update_needed | default(false)

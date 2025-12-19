@@ -1,0 +1,18 @@
+---
+# tasks file for deslicer.splunk_linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Create a file that stores the state that this system is bootstrapped
+  ansible.builtin.file:
+    path: "{{ splunk_path }}/.bootstrap"
+    state: touch
+    owner: "{{ splunk_user }}"
+    mode: '0644'
+  changed_when: false

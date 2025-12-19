@@ -1,0 +1,11 @@
+---
+# tasks file for deslicer.splunk_linux
+#
+# Description:
+#   Baseline hardeing of Server
+#
+# Prerequisite:
+#
+# Roger Lindquist (github.com/rlinq)
+# META_DATE
+# META_VERSION

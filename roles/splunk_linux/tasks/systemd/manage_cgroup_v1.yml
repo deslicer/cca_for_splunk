@@ -1,0 +1,67 @@
+---
+# tasks file for deslicer.splunk_linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.2.1
+
+- name: Block for debian based hosts
+  when:
+    - ansible_distribution == 'Debian' or
+      ansible_distribution == 'Ubuntu'
+    - running_kernel_cgroup_version | default('') != 'cgroupv1'
+  notify: notify server reboot
+  block:
+    - name: Configure legacy cgroup version until Splunk supports cgroupv2
+      ansible.builtin.lineinfile:
+        backrefs: true
+        path: /etc/default/grub
+        regexp: "^(GRUB_CMDLINE_LINUX=\".*)\"$"
+        line: '\1 systemd.unified_cgroup_hierarchy=0"'
+      register: debian_grubby_kernel_update_status
+
+    - name: Update Grub
+      ansible.builtin.command:
+        cmd: >
+          update-grub
+      tags:
+        - skip_ansible_lint
+
+- name: Configure legacy cgroup version until Splunk supports cgroupv2
+  ansible.builtin.command:
+    cmd: >
+      grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0"
+  when:
+    - ansible_distribution != 'Debian'
+    - ansible_distribution != 'Ubuntu'
+    - running_kernel_cgroup_version | default('') != 'cgroupv1'
+  register: grubby_kernel_update_status
+  notify: notify server reboot
+  tags:
+    - skip_ansible_lint
+
+- name: Copy cgroup handler script
+  ansible.builtin.copy:
+    src: "usr/local/bin/cca_cgroup_version_handler.sh"
+    dest: "/usr/local/bin/cca_cgroup_version_handler.sh"
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+    mode: '0750'
+
+- name: Configure cgroup-daemon service in /etc/systemd/system/cca_cgroup_version_daemon.service
+  ansible.builtin.template:
+    src: "etc/systemd/system/cca_cgroup_version_daemon.service.j2"
+    dest: "/etc/systemd/system/cca_cgroup_version_daemon.service"
+    mode: '0644'
+
+- name: Include role to configure splunk service
+  ansible.builtin.include_tasks: systemd/splunkd_service.yml
+  vars:
+    configure_cgroup_version: cgroupv1
+
+- name: Trigger restart if pending from cgroups update
+  ansible.builtin.meta: flush_handlers
