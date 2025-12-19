@@ -14,7 +14,7 @@
 
 - name: Get current Splunk Enterprise status
   ansible.builtin.include_role:
-    name: deslicer.splunk.linux
+    name: deslicer.splunk.core
     tasks_from: get_splunk_status.yml
   when:
     - ansible_facts.services[systemd_enterprise_name] is defined
@@ -22,7 +22,7 @@
 
 - name: Get current Splunk Enterprise version
   ansible.builtin.include_role:
-    name: deslicer.splunk.linux
+    name: deslicer.splunk.core
     tasks_from: get_splunk_version.yml
 
 - name: Include systemd setup

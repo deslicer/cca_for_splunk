@@ -73,7 +73,7 @@
 - name: Get splunk version
   ansible.builtin.include_role:
     name: deslicer.splunk.core
-    tasks_from: get_splunk_version
+    tasks_from: get_splunk_version.yml
   when:
     - control.linux_configuration.splunk_version | default(true)
 
