@@ -1,5 +1,5 @@
 ---
-# tasks file for deslicer.splunk.core
+# tasks file for deslicer.splunk_core
 #
 # Description: Take inventory name and get a adjecent search head cluster
 # member instance.

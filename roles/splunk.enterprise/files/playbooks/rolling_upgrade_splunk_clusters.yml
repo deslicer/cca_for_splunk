@@ -38,7 +38,7 @@
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_connection.yml
 
@@ -63,7 +63,7 @@
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_connection.yml
 
@@ -73,13 +73,13 @@
 
     - name: Include role to store current splunk version
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           get_splunk_version.yml
 
     - name: Include role to get search head cluster status
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           shcluster/get_shcluster_status.yml
       when:
@@ -88,7 +88,7 @@
 
     - name: Include role to precheck upgrade status on search head members
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           shcluster/precheck_upgrade_status.yml
       when:
@@ -97,7 +97,7 @@
 
     - name: Include role to get cluster status
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cluster/get_cluster_status.yml
       when:
@@ -106,7 +106,7 @@
 
     - name: Include role to precheck upgrade status on cluster managers
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cluster/precheck_upgrade_status.yml
       when:
@@ -115,7 +115,7 @@
 
     - name: Include role to get splunk status
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           get_splunk_status.yml
       when:
@@ -124,7 +124,7 @@
 
     - name: Include role to precheck upgrade status non peers and members
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           precheck_upgrade_status.yml
       when:
@@ -149,7 +149,7 @@
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_connection.yml
 
@@ -180,7 +180,7 @@
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_connection.yml
 
@@ -230,7 +230,7 @@
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_connection.yml
 
@@ -255,7 +255,7 @@
   pre_tasks:
     - name: Include role to get search head cluster status
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           shcluster/get_shcluster_status.yml
 
@@ -364,7 +364,7 @@
   pre_tasks:
     - name: Include role to offline splunk on cluster peers C1 AG1
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cluster/splunk_offline.yml
 
@@ -383,7 +383,7 @@
   pre_tasks:
     - name: Include role to offline splunk on cluster peers C1 AG2
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cluster/splunk_offline.yml
 
@@ -402,7 +402,7 @@
   pre_tasks:
     - name: Include role to offline splunk on cluster peers C1 AG3
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cluster/splunk_offline.yml
 
@@ -446,7 +446,7 @@
   pre_tasks:
     - name: Include post tasks
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_shcluster.yml
       when:
@@ -455,7 +455,7 @@
 
     - name: Include task to get current splunk version
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           splunk_version.yml
       when:
@@ -464,7 +464,7 @@
 
     - name: Check kvstore migration readiness
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           kvstore_migration_readiness.yml
       when:
@@ -474,7 +474,7 @@
 
     - name: Check kvstore engine upgrade readiness
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           kvstore_engine_upgrade_readiness.yml
       when:
@@ -493,7 +493,7 @@
   pre_tasks:
     - name: Initiate kvstore engine migration
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           migrate_kvstore_engine.yml
       when:
@@ -504,7 +504,7 @@
   tasks:
     - name: Include post tasks
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_shcluster.yml
       when:
@@ -515,7 +515,7 @@
 
     - name: Initiate kvstore engine version upgrade
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           upgrade_kvstore_engine_version.yml
       when:

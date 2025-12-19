@@ -12,7 +12,7 @@
 
 - name: Include tasks to login to splunk cli
   ansible.builtin.include_role:
-    name: deslicer.splunk.core
+    name: deslicer.splunk_core
     tasks_from: splunk_login.yml
   when:
     - enterprise_upgrade | default(false)
@@ -35,7 +35,7 @@
 
 - name: Include tasks to logout on splunk cli
   ansible.builtin.include_role:
-    name: deslicer.splunk.core
+    name: deslicer.splunk_core
     tasks_from: splunk_logout.yml
   when:
     - enterprise_upgrade | default(false)

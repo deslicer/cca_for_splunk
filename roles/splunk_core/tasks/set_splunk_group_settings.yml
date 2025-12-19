@@ -1,5 +1,5 @@
 ---
-# tasks file for deslicer.splunk.core
+# tasks file for deslicer.splunk_core
 #
 # Description: This tasks reads the splunk_conf_group_settings_flattened and
 #              apply them on each splunk host that is targeted by the

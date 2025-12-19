@@ -1,5 +1,5 @@
 ---
-# tasks file for deslicer.splunk.core
+# tasks file for deslicer.splunk_core
 #
 # Description: Set reboot flag so that rolling server reboot can be orchestrated
 #

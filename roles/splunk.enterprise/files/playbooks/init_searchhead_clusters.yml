@@ -18,7 +18,7 @@
   pre_tasks:
     - name: Wait for connection to server
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_connection.yml
 
@@ -41,7 +41,7 @@
 
     - name: Include role to configure Splunk
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
       when:
         - not deslicer_automation_platform | default(false)
 
@@ -71,7 +71,7 @@
 
     - name: Include role to configure Splunk
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
       when:
         - not deslicer_automation_platform | default(false)
 
@@ -93,12 +93,12 @@
   tasks:
     - name: Check search head captain init
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_captain_init_status.yml
 
     - name: Bootstrap Search Head cluster captain
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: bootstrap_search_head_captain.yml
 
     - name: Trigger restart if pending from bootstrap
@@ -106,12 +106,12 @@
 
     - name: Check cluster member status
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_cluster_member_status.yml
 
     - name: Wait until cluster is stable
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_shcluster.yml
 
@@ -130,12 +130,12 @@
   tasks:
     - name: Check search head captain init
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_captain_init_status.yml
 
     - name: Bootstrap Search Head cluster captain
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: bootstrap_search_head_captain.yml
 
     - name: Trigger restart if pending from bootstrap
@@ -143,12 +143,12 @@
 
     - name: Check cluster member status
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_cluster_member_status.yml
 
     - name: Wait until cluster is stable
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_shcluster.yml
 
@@ -167,12 +167,12 @@
   tasks:
     - name: Check search head captain init
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_captain_init_status.yml
 
     - name: Bootstrap Search Head cluster captain
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: bootstrap_search_head_captain.yml
 
     - name: Trigger restart if pending from bootstrap
@@ -180,12 +180,12 @@
 
     - name: Check cluster member status
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_cluster_member_status.yml
 
     - name: Wait until cluster is stable
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_shcluster.yml
 
@@ -204,12 +204,12 @@
   tasks:
     - name: Check search head captain init
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_captain_init_status.yml
 
     - name: Bootstrap Search Head cluster captain
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: bootstrap_search_head_captain.yml
 
     - name: Trigger restart if pending from bootstrap
@@ -217,12 +217,12 @@
 
     - name: Check cluster member status
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_cluster_member_status.yml
 
     - name: Wait until cluster is stable
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_shcluster.yml
 
@@ -241,12 +241,12 @@
   tasks:
     - name: Check search head captain init
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_captain_init_status.yml
 
     - name: Bootstrap Search Head cluster captain
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: bootstrap_search_head_captain.yml
 
     - name: Trigger restart if pending from bootstrap
@@ -254,12 +254,12 @@
 
     - name: Check cluster member status
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_cluster_member_status.yml
 
     - name: Wait until cluster is stable
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_shcluster.yml
 
@@ -278,12 +278,12 @@
   tasks:
     - name: Check search head captain init
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_captain_init_status.yml
 
     - name: Bootstrap Search Head cluster captain
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: bootstrap_search_head_captain.yml
 
     - name: Trigger restart if pending from bootstrap
@@ -291,12 +291,12 @@
 
     - name: Check cluster member status
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_cluster_member_status.yml
 
     - name: Wait until cluster is stable
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_shcluster.yml
 
@@ -315,12 +315,12 @@
   tasks:
     - name: Check search head captain init
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_captain_init_status.yml
 
     - name: Bootstrap Search Head cluster captain
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: bootstrap_search_head_captain.yml
 
     - name: Trigger restart if pending from bootstrap
@@ -328,12 +328,12 @@
 
     - name: Check cluster member status
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_cluster_member_status.yml
 
     - name: Wait until cluster is stable
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_shcluster.yml
 
@@ -352,12 +352,12 @@
   tasks:
     - name: Check search head captain init
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_captain_init_status.yml
 
     - name: Bootstrap Search Head cluster captain
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: bootstrap_search_head_captain.yml
 
     - name: Trigger restart if pending from bootstrap
@@ -365,12 +365,12 @@
 
     - name: Check cluster member status
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_cluster_member_status.yml
 
     - name: Wait until cluster is stable
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_shcluster.yml
 
@@ -390,12 +390,12 @@
   tasks:
     - name: Check search head captain init
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_captain_init_status.yml
 
     - name: Bootstrap Search Head cluster captain
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: bootstrap_search_head_captain.yml
 
     - name: Trigger restart if pending from bootstrap
@@ -403,12 +403,12 @@
 
     - name: Check cluster member status
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from: check_cluster_member_status.yml
 
     - name: Wait until cluster is stable
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_shcluster.yml
 
@@ -428,7 +428,7 @@
 
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
@@ -436,7 +436,7 @@
 #      already ongoing. Then don't perform this restart, just remove the state file.
     - name: Restart splunkd if needed
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           restart_splunkd.yml
       when:
@@ -444,7 +444,7 @@
 
     - name: Perform a bundle push if a pending action is found
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           apply_shcluster_bundle.yml
 
@@ -465,14 +465,14 @@
 
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
   tasks:
     - name: Start a rolling restart if needed
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
@@ -484,7 +484,7 @@
   post_tasks:
     - name: Clean up rolling restart from remaining members
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cleanup_shcluster_rolling_restart_file.yml
 
@@ -503,14 +503,14 @@
 
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
   tasks:
     - name: Start a rolling restart if needed
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
@@ -522,7 +522,7 @@
   post_tasks:
     - name: Clean up rolling restart from remaining members
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cleanup_shcluster_rolling_restart_file.yml
 
@@ -547,14 +547,14 @@
 
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
   tasks:
     - name: Start a rolling restart if needed
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
@@ -566,7 +566,7 @@
   post_tasks:
     - name: Clean up rolling restart from remaining members
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cleanup_shcluster_rolling_restart_file.yml
 
@@ -585,14 +585,14 @@
 
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
   tasks:
     - name: Start a rolling restart if needed
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
@@ -604,7 +604,7 @@
   post_tasks:
     - name: Clean up rolling restart from remaining members
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cleanup_shcluster_rolling_restart_file.yml
 
@@ -623,14 +623,14 @@
 
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
   tasks:
     - name: Start a rolling restart if needed
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
@@ -642,7 +642,7 @@
   post_tasks:
     - name: Clean up rolling restart from remaining members
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cleanup_shcluster_rolling_restart_file.yml
 
@@ -661,14 +661,14 @@
 
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
   tasks:
     - name: Start a rolling restart if needed
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
@@ -680,7 +680,7 @@
   post_tasks:
     - name: Clean up rolling restart from remaining members
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cleanup_shcluster_rolling_restart_file.yml
 
@@ -699,14 +699,14 @@
 
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
   tasks:
     - name: Start a rolling restart if needed
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
@@ -718,7 +718,7 @@
   post_tasks:
     - name: Clean up rolling restart from remaining members
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cleanup_shcluster_rolling_restart_file.yml
 
@@ -737,14 +737,14 @@
 
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
   tasks:
     - name: Start a rolling restart if needed
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
@@ -756,7 +756,7 @@
   post_tasks:
     - name: Clean up rolling restart from remaining members
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cleanup_shcluster_rolling_restart_file.yml
 
@@ -775,14 +775,14 @@
 
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
   tasks:
     - name: Start a rolling restart if needed
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
@@ -794,6 +794,6 @@
   post_tasks:
     - name: Clean up rolling restart from remaining members
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cleanup_shcluster_rolling_restart_file.yml

@@ -182,7 +182,7 @@
 
 - name: Include role to update splunk version
   ansible.builtin.include_role:
-    name: deslicer.splunk.core
+    name: deslicer.splunk_core
     tasks_from:
       get_splunk_version.yml
   when:

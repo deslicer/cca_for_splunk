@@ -11,7 +11,7 @@
 
 - name: Include tasks to login to Splunk
   ansible.builtin.include_role:
-    name: deslicer.splunk.core
+    name: deslicer.splunk_core
     tasks_from: splunk_login.yml
 
 - name: Initialize rolling upgrade on cluster manager

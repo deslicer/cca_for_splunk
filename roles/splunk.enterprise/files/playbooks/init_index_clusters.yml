@@ -15,7 +15,7 @@
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_connection.yml
 
@@ -39,7 +39,7 @@
 
     - name: Manage Splunk conf settings
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
       when:
         - not deslicer_automation_platform | default(false)
 
@@ -69,7 +69,7 @@
 
     - name: Manage Splunk conf settings
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
       when:
         - not deslicer_automation_platform | default(false)
 
@@ -89,13 +89,13 @@
 
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
     - name: Restart splunkd if needed
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           restart_splunkd.yml
       when:
@@ -103,7 +103,7 @@
 
     - name: Check Pre-flight status
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_preflight_status.yml
       vars:
@@ -113,7 +113,7 @@
 
     - name: Perform a cluster-bundle push, validate and handle a rolling restart scenario
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           apply_cluster_bundle.yml
       when:
@@ -124,13 +124,13 @@
 
     - name: Re-Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
     - name: Perform a rolling restart of the cluster peers
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           cluster_peer_rolling_restart.yml
       when:

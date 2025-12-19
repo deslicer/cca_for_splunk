@@ -1,5 +1,5 @@
 ---
-# tasks file for deslicer.splunk.core
+# tasks file for deslicer.splunk_core
 #
 # Description:
 #
@@ -149,7 +149,7 @@
 
 - name: Get pending actions
   ansible.builtin.include_role:
-    name: deslicer.splunk.core
+    name: deslicer.splunk_core
     tasks_from: check_pending_actions.yml
 
 - name: End play for this host due to this reason (dnf module)

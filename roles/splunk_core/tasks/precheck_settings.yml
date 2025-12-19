@@ -1,5 +1,5 @@
 ---
-# tasks file for deslicer.splunk.core
+# tasks file for deslicer.splunk_core
 #
 # Description: This tasks reads all splunk_conf_*_settings runs a
 #              pre validation of them to check that they don't have

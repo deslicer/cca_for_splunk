@@ -1,5 +1,5 @@
 ---
-# tasks file for deslicer.splunk.core
+# tasks file for deslicer.splunk_core
 #
 # Description: Login to splunk on cluster manager that relates to the host
 #              given as cluster_manager_loop_var variable from outer loop.

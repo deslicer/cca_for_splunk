@@ -15,7 +15,7 @@
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           wait_for_connection.yml
 
@@ -39,20 +39,20 @@
 
     - name: Manage Splunk conf settings
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
       when:
         - not deslicer_automation_platform | default(false)
 
   post_tasks:
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
     - name: Restart splunkd if needed
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           restart_splunkd.yml
       when:
@@ -84,20 +84,20 @@
 
     - name: Manage Splunk conf settings
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
       when:
         - not deslicer_automation_platform | default(false)
 
   post_tasks:
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
     - name: Restart splunkd if needed
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           restart_splunkd.yml
       when:
@@ -129,20 +129,20 @@
 
     - name: Manage Splunk conf settings
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
       when:
         - not deslicer_automation_platform | default(false)
 
   post_tasks:
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           check_pending_actions.yml
 
     - name: Restart splunkd if needed
       ansible.builtin.include_role:
-        name: deslicer.splunk.core
+        name: deslicer.splunk_core
         tasks_from:
           restart_splunkd.yml
       when:

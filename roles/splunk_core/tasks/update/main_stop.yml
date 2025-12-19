@@ -1,5 +1,5 @@
 ---
-# tasks file for deslicer.splunk.core
+# tasks file for deslicer.splunk_core
 #
 # Description: Handle differences in splunk between cluster peers, search
 #              head membes and other splunk servers.

@@ -1,5 +1,5 @@
 ---
-# tasks file for deslicer.splunk.core
+# tasks file for deslicer.splunk_core
 #
 # Description: Configure Transparent Huge Pages (THP) to be disabled for Splunk performance
 #

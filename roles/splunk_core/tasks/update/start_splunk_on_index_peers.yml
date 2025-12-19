@@ -1,5 +1,5 @@
 ---
-# tasks file for deslicer.splunk.core
+# tasks file for deslicer.splunk_core
 #
 # Description: Start splunk and use inventory group to
 #              find related cluster manager to a cluster_peer.

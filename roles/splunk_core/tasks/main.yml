@@ -1,5 +1,5 @@
 ---
-# tasks file for deslicer.splunk.core
+# tasks file for deslicer.splunk_core
 #
 # Description:
 #   The data-model handles everything that comes around settings parameters for
@@ -98,7 +98,7 @@
 
 - name: Wait for a rolling restart on search head cluster to complete
   ansible.builtin.import_role:
-    name: deslicer.splunk.core
+    name: deslicer.splunk_core
     tasks_from: shcluster/wait_for_shcluster.yml
   when:
     - inventory_hostname in ( groups.searchhead_members | default([]) )
