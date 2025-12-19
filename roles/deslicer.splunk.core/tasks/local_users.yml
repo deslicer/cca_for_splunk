@@ -28,6 +28,16 @@
   tags:
     - skip_ansible_lint
 
+- name: Core Control - Set local users to manage
+  ansible.builtin.set_fact:
+    _core_users: "{{ cca_splunk_local_users | default([]) }}"
+
+- name: Core Control - Filter users to add
+  ansible.builtin.set_fact:
+    _core_users_to_add: >-
+      {{ _core_users | selectattr('state', 'undefined') | list +
+         _core_users | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list }}
+
 - name: Core Control - Manage additional local users to Splunk
   ansible.builtin.lineinfile:
     path: '{{ splunk_path }}/etc/passwd'
@@ -35,7 +45,7 @@
     line: ':{{ user.name }}:{{ user.passwd_hash }}::{{ user.description }}:{{ user.role }}:{{ user.email }}:::{{ user.id }}'
   loop_control:
     loop_var: user
-  loop: '{{ cca_splunk_local_users | default([]) | selectattr("state", "undefined") | list + cca_splunk_local_users | default([]) | selectattr("state", "defined") | selectattr("state", "eq", "present") | list }}'
+  loop: "{{ _core_users_to_add }}"
   notify: notify splunkd restart
 
 - name: Core Control - Remove local users from Splunk
@@ -48,6 +58,16 @@
   loop: '{{ cca_splunk_local_users | default([]) | selectattr("state", "defined") | selectattr("state", "eq", "absent") | list }}'
   notify: notify splunkd restart
 
+- name: Group Vars - Set local users to manage
+  ansible.builtin.set_fact:
+    _group_users: "{{ cca_splunk_local_users_group_settings | default([]) }}"
+
+- name: Group Vars - Filter users to add
+  ansible.builtin.set_fact:
+    _group_users_to_add: >-
+      {{ _group_users | selectattr('state', 'undefined') | list +
+         _group_users | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list }}
+
 - name: Group Vars - Manage additional local users to Splunk
   ansible.builtin.lineinfile:
     path: '{{ splunk_path }}/etc/passwd'
@@ -55,7 +75,7 @@
     line: ':{{ user.name }}:{{ user.passwd_hash }}::{{ user.description }}:{{ user.role }}:{{ user.email }}:::{{ user.id }}'
   loop_control:
     loop_var: user
-  loop: '{{ cca_splunk_local_users_group_settings | default([]) | selectattr("state", "undefined") | list + cca_splunk_local_users_group_settings | default([]) | selectattr("state", "defined") | selectattr("state", "eq", "present") | list }}'
+  loop: "{{ _group_users_to_add }}"
   notify: notify splunkd restart
 
 - name: Group Vars - Remove local users from Splunk
