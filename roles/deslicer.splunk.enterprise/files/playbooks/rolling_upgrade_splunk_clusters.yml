@@ -20,26 +20,6 @@
 # Disable deferred scheduled searches - Should be possible to configure on the Search heads prior to the upgrade
 
 
-#    ___       _ _   _       _ _
-#   |_ _|_ __ (_) |_(_) __ _| (_)_______
-#    | || '_ \| | __| |/ _` | | |_  / _ \
-#    | || | | | | |_| | (_| | | |/ /  __/
-#   |___|_| |_|_|\__|_|\__,_|_|_/___\___|
-#
-
-- name: Initialize playbook run on manager server - Rolling Cluster Upgrade
-  hosts: manager
-  connection: local
-  strategy: linear
-  pre_tasks:
-    - name: Include initialize task
-      ansible.builtin.include_role:
-        name: cca.core.control
-        tasks_from:
-          initialize.yml
-      vars:
-        target: "rolling_upgrade_splunk_clusters"
-
 
 #    ____           _   _                           _     _____         _
 #   |  _ \ _ __ ___| | | |_ __   __ _ _ __ __ _  __| | __|_   _|_ _ ___| | _____
@@ -62,12 +42,6 @@
         name: deslicer.splunk.core
         tasks_from:
           wait_for_connection.yml
-
-    - name: Include pre tasks
-      ansible.builtin.include_role:
-        name: cca.core.control
-        tasks_from:
-          pre_upgrade_tasks.yml
 
 #    ____            ____ _               _
 #   |  _ \ _ __ ___ / ___| |__   ___  ___| | _____
@@ -186,13 +160,7 @@
 
     - name: Include role to install splunk enterprise
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
-
-    - name: Include role to run post upgrade tasks
-      ansible.builtin.include_role:
-        name: cca.core.control
-        tasks_from:
-          post_upgrade_tasks.yml
+        name: deslicer.splunk.enterprise
 
 
 # Upgrade the search head tier
@@ -223,13 +191,7 @@
 
     - name: Include role to install splunk enterprise
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
-
-    - name: Include role to run post upgrade tasks
-      ansible.builtin.include_role:
-        name: cca.core.control
-        tasks_from:
-          post_upgrade_tasks.yml
+        name: deslicer.splunk.enterprise
 
 # Upgrade of Search Head Clusters, if more than 1 search head clusters exists per environment
 # copy this playbook to your infrastructure playbooks folder and extend it with more clusters.
@@ -252,7 +214,7 @@
   pre_tasks:
     - name: Include role to install splunk enterprise
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
+        name: deslicer.splunk.enterprise
         tasks_from:
           offline_upgrade.yml
       when:
@@ -279,7 +241,7 @@
 
     - name: Include role to install splunk enterprise
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
+        name: deslicer.splunk.enterprise
       when:
         - shc_upgrade_method | default('rolling') == 'offline'
 
@@ -300,14 +262,14 @@
 
     - name: Include role to install splunk enterprise
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
+        name: deslicer.splunk.enterprise
         tasks_from:
           shcluster/init_upgrade.yml
 
   tasks:
     - name: Include role to install splunk enterprise - Non Captain Members - SHC C1
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
+        name: deslicer.splunk.enterprise
         tasks_from:
           shcluster_upgrade_handler.yml
       when:
@@ -331,7 +293,7 @@
   tasks:
     - name: Include role to install splunk enterprise on search head members - remaining member
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
+        name: deslicer.splunk.enterprise
         tasks_from:
           shcluster_upgrade_handler.yml
       vars:
@@ -349,13 +311,7 @@
   tasks:
     - name: Include role to install splunk enterprise
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
-
-    - name: Include role to run post upgrade tasks
-      ansible.builtin.include_role:
-        name: cca.core.control
-        tasks_from:
-          post_upgrade_tasks.yml
+        name: deslicer.splunk.enterprise
 
 
 - name: Finalize Upgrade Search Head Members Cluster - SHC C1
@@ -368,15 +324,10 @@
   pre_tasks:
     - name: Include role to install splunk enterprise
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
+        name: deslicer.splunk.enterprise
         tasks_from:
           shcluster/finalize_upgrade.yml
 
-    - name: Include role to run post upgrade tasks
-      ansible.builtin.include_role:
-        name: cca.core.control
-        tasks_from:
-          post_upgrade_tasks.yml
 
 # For SHC, perform the upgrade as per the documentation
 # Rolling upgrade
@@ -400,7 +351,7 @@
   pre_tasks:
     - name: Include role to init upgrade splunk enterprise on cluster manager - C1
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
+        name: deslicer.splunk.enterprise
         tasks_from:
           cluster/init_upgrade.yml
 
@@ -420,13 +371,8 @@
 
     - name: Include role to install splunk enterprise on cluster peers C1 AG1
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
+        name: deslicer.splunk.enterprise
 
-    - name: Include role to run post upgrade tasks
-      ansible.builtin.include_role:
-        name: cca.core.control
-        tasks_from:
-          post_upgrade_tasks.yml
 
 - name: Upgrade Cluster Peers Cluster C1 AG2
   hosts: cluster_peers_cluster_c1:&ag2
@@ -444,13 +390,8 @@
 
     - name: Include role to install splunk enterprise on cluster peers C1 AG2
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
+        name: deslicer.splunk.enterprise
 
-    - name: Include role to run post upgrade tasks
-      ansible.builtin.include_role:
-        name: cca.core.control
-        tasks_from:
-          post_upgrade_tasks.yml
 
 - name: Upgrade Cluster Peers Cluster C1 AG3
   hosts: cluster_peers_cluster_c1:&ag3
@@ -468,13 +409,8 @@
 
     - name: Include role to install splunk enterprise on cluster peers C1 AG3
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
+        name: deslicer.splunk.enterprise
 
-    - name: Include role to run post upgrade tasks
-      ansible.builtin.include_role:
-        name: cca.core.control
-        tasks_from:
-          post_upgrade_tasks.yml
 
 - name: Finalize Cluster Manager Cluster C1
   hosts: cluster_manager_cluster_c1
@@ -485,15 +421,9 @@
   pre_tasks:
     - name: Include role to finalize splunk enterprise on cluster manager - C1
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
+        name: deslicer.splunk.enterprise
         tasks_from:
           cluster/finalize_upgrade.yml
-
-    - name: Include role to run post upgrade tasks
-      ansible.builtin.include_role:
-        name: cca.core.control
-        tasks_from:
-          post_upgrade_tasks.yml
 
 
 #    ____           _   _   _                           _      ____  _   _  ____ _____         _
@@ -517,7 +447,7 @@
   pre_tasks:
     - name: Include post tasks
       ansible.builtin.include_role:
-        name: cca.splunk.role-searchhead
+        name: deslicer.splunk.core
         tasks_from:
           wait_for_shcluster.yml
       when:
@@ -526,7 +456,7 @@
 
     - name: Include task to get current splunk version
       ansible.builtin.include_role:
-        name: cca.core.control
+        name: deslicer.splunk.core
         tasks_from:
           splunk_version.yml
       when:
@@ -535,7 +465,7 @@
 
     - name: Check kvstore migration readiness
       ansible.builtin.include_role:
-        name: cca.splunk.role-searchhead
+        name: deslicer.splunk.core
         tasks_from:
           kvstore_migration_readiness.yml
       when:
@@ -545,7 +475,7 @@
 
     - name: Check kvstore engine upgrade readiness
       ansible.builtin.include_role:
-        name: cca.splunk.role-searchhead
+        name: deslicer.splunk.core
         tasks_from:
           kvstore_engine_upgrade_readiness.yml
       when:
@@ -564,7 +494,7 @@
   pre_tasks:
     - name: Initiate kvstore engine migration
       ansible.builtin.include_role:
-        name: cca.splunk.role-searchhead
+        name: deslicer.splunk.core
         tasks_from:
           migrate_kvstore_engine.yml
       when:
@@ -575,7 +505,7 @@
   tasks:
     - name: Include post tasks
       ansible.builtin.include_role:
-        name: cca.splunk.role-searchhead
+        name: deslicer.splunk.core
         tasks_from:
           wait_for_shcluster.yml
       when:
@@ -586,31 +516,10 @@
 
     - name: Initiate kvstore engine version upgrade
       ansible.builtin.include_role:
-        name: cca.splunk.role-searchhead
+        name: deslicer.splunk.core
         tasks_from:
           upgrade_kvstore_engine_version.yml
       when:
         - shc_upgrade_kvstore_engine | default(false)
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.4.0', '<')
-
-
-#    _____ _             _ _
-#   |  ___(_)_ __   __ _| (_)_______
-#   | |_  | | '_ \ / _` | | |_  / _ \
-#   |  _| | | | | | (_| | | |/ /  __/
-#   |_|   |_|_| |_|\__,_|_|_/___\___|
-#
-
-- name: Finalize playbook run on manager server - Rolling Cluster Upgrade
-  hosts: manager
-  connection: local
-  strategy: linear
-  pre_tasks:
-    - name: Include initialize task
-      ansible.builtin.include_role:
-        name: cca.core.control
-        tasks_from:
-          finalize.yml
-      vars:
-        target: "rolling_upgrade_splunk_clusters"

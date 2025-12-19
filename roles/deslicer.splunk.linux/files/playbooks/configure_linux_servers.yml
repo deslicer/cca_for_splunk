@@ -6,7 +6,7 @@
 
 # Configure all servers
 - name: Configure all splunk_servers
-  hosts: splunk_servers:!localhost
+  hosts: splunk_servers
   become: true
   become_method: ansible.builtin.sudo
   gather_facts: false
@@ -23,7 +23,7 @@
         name: deslicer.splunk.core
 
 - name: Reboot servers in availability group 1
-  hosts: splunk_servers:&ag1:!localhost
+  hosts: splunk_servers:&ag1
   become: true
   become_method: ansible.builtin.sudo
   pre_tasks:
@@ -33,7 +33,7 @@
         tasks_from: server_reboot_handler.yml
 
 - name: Reboot servers in availability group 2
-  hosts: splunk_servers:&ag2:!localhost
+  hosts: splunk_servers:&ag2
   become: true
   become_method: ansible.builtin.sudo
   pre_tasks:
@@ -43,7 +43,7 @@
         tasks_from: server_reboot_handler.yml
 
 - name: Reboot servers in availability group 3
-  hosts: splunk_servers:&ag3:!localhost
+  hosts: splunk_servers:&ag3
   become: true
   become_method: ansible.builtin.sudo
   pre_tasks:

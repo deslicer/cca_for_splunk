@@ -11,7 +11,7 @@
 
 - name: Include task to check Splunk status
   ansible.builtin.include_role:
-    name: deslicer.splunk.enterprise-install
+    name: deslicer.splunk.enterprise
     tasks_from: splunk_status.yml
 
 - name: Include tasks to login to splunk cli

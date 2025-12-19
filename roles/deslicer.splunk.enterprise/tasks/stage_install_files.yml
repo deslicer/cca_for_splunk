@@ -1,5 +1,5 @@
 ---
-# tasks file for deslicer.splunk.enterprise-install
+# tasks file for deslicer.splunk.enterprise
 #
 # Description:
 #
@@ -50,7 +50,7 @@
       Found {{ find_cca_splunk_tgz.files | length }} Splunk install files on the
       host that matches splunk-{{ splunk_enterprise_version }}-*64.tgz.
       Download one using this command,
-      ${CCA_REPO_DIR}/roles/deslicer.splunk.enterprise-install/files/bin/download_splunk_enterprise.sh
+      ${CCA_REPO_DIR}/roles/deslicer.splunk.enterprise/files/bin/download_splunk_enterprise.sh
   when:
     - not stat_splunk_enterprise_bin.stat.exists or
       enterprise_upgrade | default(false)

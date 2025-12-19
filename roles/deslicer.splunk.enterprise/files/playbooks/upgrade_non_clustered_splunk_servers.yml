@@ -42,15 +42,7 @@
 
     - name: Upgrade Splunk Enterprise
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
-      when:
-        - upgrade_cluster_manager | default(true)
-
-    - name: Run post upgrade tasks
-      ansible.builtin.include_role:
-        name: cca.core.control
-        tasks_from:
-          post_upgrade_tasks.yml
+        name: deslicer.splunk.enterprise
       when:
         - upgrade_cluster_manager | default(true)
 
@@ -78,7 +70,7 @@
 
     - name: Include role to install splunk enterprise - AG1
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
+        name: deslicer.splunk.enterprise
       when:
         - splunk_ok_status_flag | default(false)
 
@@ -106,7 +98,7 @@
 
     - name: Include role to install splunk enterprise - AG2
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
+        name: deslicer.splunk.enterprise
       when:
         - splunk_ok_status_flag | default(false)
 
@@ -133,6 +125,6 @@
 
     - name: Include role to install splunk enterprise - AG3
       ansible.builtin.include_role:
-        name: cca.splunk.enterprise-install
+        name: deslicer.splunk.enterprise
       when:
         - splunk_ok_status_flag | default(false)

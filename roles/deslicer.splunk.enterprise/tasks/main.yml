@@ -1,5 +1,5 @@
 ---
-# tasks file for deslicer.splunk.enterprise-install
+# tasks file for deslicer.splunk.enterprise
 #
 # Description:
 #
@@ -9,7 +9,7 @@
 #
 # Release: 1.0.0
 
-# tasks file for deslicer.splunk.enterprise-install
+# tasks file for deslicer.splunk.enterprise
 #
 - name: Check Splunk status
   ansible.builtin.include_tasks: splunk_status.yml
