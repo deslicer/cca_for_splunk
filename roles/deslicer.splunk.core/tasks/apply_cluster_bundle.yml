@@ -87,8 +87,7 @@
       ansible.builtin.set_fact:
         has_bundle_validation_errors: "{{
           (cluster_bundle_restart_status.stdout | default('')) is search('bundle_validation_errors')
-          and '[Critical]' in (cluster_bundle_restart_status.stdout | default(''))
-        }}"
+          and '[Critical]' in (cluster_bundle_restart_status.stdout | default('')) }}"
 
     - name: Fail task if bundle validation errors are found
       ansible.builtin.debug:

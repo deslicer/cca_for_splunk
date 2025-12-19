@@ -97,3 +97,4 @@
   when:
     - deploy_scope is not defined
     - not skip_splunk_status_check | default(false)
+    - not deslicer_automation_platform | default(false)

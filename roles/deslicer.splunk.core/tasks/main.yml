@@ -17,52 +17,50 @@
 
 - name: Include task for checking cca_for_splunk init state
   ansible.builtin.include_tasks: check_init.yml
+  when:
+    - not deslicer_automation_platform | default(false)
 
 - name: Include task for checking splunk.secret
   ansible.builtin.include_tasks: check_splunk_secret.yml
+  when:
+    - not deslicer_automation_platform | default(false)
 
 - name: Include task ensuring local admin user
   ansible.builtin.include_tasks: local_users.yml
-
-- name: Include task for checking certificate status
-  ansible.builtin.include_role:
-    name: cca.splunk.ssl-certificates
-    tasks_from: validate_target_certificates
+  when:
+    - not deslicer_automation_platform | default(false)
 
 - name: Include task to calculate splunk enterprise version
   ansible.builtin.include_tasks: get_splunk_version.yml
 
 - name: Run a precheck of the config to find errors
   ansible.builtin.include_tasks: precheck_settings.yml
+  when:
+    - not deslicer_automation_platform | default(false)
 
 - name: Include task for splunk general settings
   ansible.builtin.include_tasks: set_splunk_general_settings.yml
   when:
     - splunk_conf_general_settings_flattened is defined
+    - not deslicer_automation_platform | default(false)
 
 - name: Include task for splunk group settings
   ansible.builtin.include_tasks: set_splunk_group_settings.yml
   when:
     - splunk_conf_group_settings_flattened is defined
+    - not deslicer_automation_platform | default(false)
 
 - name: Include task for splunk host settings
   ansible.builtin.include_tasks: set_splunk_host_settings.yml
   when:
     - splunk_conf_host_settings_flattened is defined
+    - not deslicer_automation_platform | default(false)
 
 - name: Include task for adding Splunk license
   ansible.builtin.include_tasks: add_license.yml
   when:
     - is_license_manager | default(false)
-
-- name: Include licensed CCA infrastructure tasks
-  ansible.builtin.include_role:
-    name: "{{ cca_control_infrastructure.role }}"
-    tasks_from:
-      "{{ cca_control_infrastructure.task }}"
-  loop_control:
-    loop_var: cca_control_infrastructure
-  loop: '{{ cca_control_infrastructure_tasks | default([]) if cca_control_infrastructure_tasks | default([]) is iterable else [] }}'
+    - not deslicer_automation_platform | default(false)
 
 - name: Restart Splunkd if splunk.secret is replaced
   ansible.builtin.command:
@@ -73,6 +71,7 @@
   delay: 10
   when:
     - result_splunk_secret_replace.changed
+    - not deslicer_automation_platform | default(false)
   tags:
     - skip_ansible_lint
 

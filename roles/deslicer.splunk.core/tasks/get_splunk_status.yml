@@ -60,3 +60,4 @@
     get_certificate_status.yml
   when:
     - cca_splunk_enterprise_upgrade | default(false)
+    - not deslicer_automation_platform | default(false)

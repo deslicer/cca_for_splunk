@@ -5,13 +5,14 @@
 #
 # Prerequisite:
 #
-# Author: Roger Lindquist (github.com/rlinq)
+# Author: Roger Lindquist (github.com/deslicer)
 #
-# Release: 2025.2.1
+# Release: 1.0.0
 
 - name: Include task to check Splunk status
-  ansible.builtin.include_tasks:
-    ../deslicer.splunk.enterprise-install/tasks/splunk_status.yml
+  ansible.builtin.include_role:
+    name: deslicer.splunk.enterprise-install
+    tasks_from: splunk_status.yml
 
 - name: Include tasks to login to splunk cli
   ansible.builtin.include_tasks:
