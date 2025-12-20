@@ -19,7 +19,7 @@
 - name: Determine actions based on configuration changes
   ansible.builtin.set_fact:
     splunk_actions: "{{ cca_splunk_settings_update.results |
-                        analyze_splunk_changes(rolling_restart_pending=stat_rolling_restart_pending | default(false),
+                        deslicer.splunk.analyze_splunk_changes(rolling_restart_pending=stat_rolling_restart_pending | default(false),
                         splunkd_restart_pending=stat_splunkd_restart_pending | default(false),
                         force_splunkd_restart=force_splunkd_restart | default(false),
                         force_bundle_push=force_bundle_push | default(false)) }}"
