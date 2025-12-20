@@ -78,5 +78,5 @@
 
 - name: Include task to check cluster status
   ansible.builtin.include_role:
-    name: cca.splunk.role-searchhead
-    tasks_from: wait_for_shcluster.yml
+    name: deslicer.splunk.core
+    tasks_from: shcluster/wait_for_shcluster.yml

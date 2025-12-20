@@ -448,7 +448,7 @@
       ansible.builtin.include_role:
         name: deslicer.splunk.core
         tasks_from:
-          wait_for_shcluster.yml
+          shcluster/wait_for_shcluster.yml
       when:
         - shc_upgrade_kvstore_engine | default(false)
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.4.0', '<')
@@ -466,7 +466,7 @@
       ansible.builtin.include_role:
         name: deslicer.splunk.core
         tasks_from:
-          kvstore_migration_readiness.yml
+          shcluster/kvstore_migration_readiness.yml
       when:
         - shc_upgrade_kvstore_engine | default(false)
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
@@ -476,7 +476,7 @@
       ansible.builtin.include_role:
         name: deslicer.splunk.core
         tasks_from:
-          kvstore_engine_upgrade_readiness.yml
+          shcluster/kvstore_engine_upgrade_readiness.yml
       when:
         - shc_upgrade_kvstore_engine | default(false)
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
@@ -495,7 +495,7 @@
       ansible.builtin.include_role:
         name: deslicer.splunk.core
         tasks_from:
-          migrate_kvstore_engine.yml
+          shcluster/migrate_kvstore_engine.yml
       when:
         - shc_upgrade_kvstore_engine | default(false)
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
@@ -506,7 +506,7 @@
       ansible.builtin.include_role:
         name: deslicer.splunk.core
         tasks_from:
-          wait_for_shcluster.yml
+          shcluster/wait_for_shcluster.yml
       when:
         - shc_upgrade_kvstore_engine | default(false)
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
@@ -517,7 +517,7 @@
       ansible.builtin.include_role:
         name: deslicer.splunk.core
         tasks_from:
-          upgrade_kvstore_engine_version.yml
+          shcluster/upgrade_kvstore_engine_version.yml
       when:
         - shc_upgrade_kvstore_engine | default(false)
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')

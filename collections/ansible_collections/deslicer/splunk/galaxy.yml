@@ -1,6 +1,6 @@
 namespace: deslicer
 name: splunk
-version: 0.1.12
+version: 0.1.14
 readme: README.md
 authors:
   - Deslicer AB <info@deslicer.com>
