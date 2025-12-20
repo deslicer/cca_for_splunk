@@ -7,7 +7,6 @@
 # MENU_DESC=Upgrade Splunk on all cluster dependent servers.
 # EXTRA_VARS=cca_splunk_enterprise_upgrade(false) \
 # shcluster_precheck(true) upgrade_check(true) \
-# shc_upgrade_method(rolling|[offline]) \
 # shc_upgrade_kvstore_engine(false)
 
 # Use shc_upgrade_kvstore_engine to upgrade the kvstore engine to wiredtiger
@@ -201,48 +200,6 @@
 #    ___) |  __/ (_| | | | (__| | | |  _  |  __/ (_| | (_| | |___| | |_| \__ \ ||  __/ |  \__ \
 #   |____/ \___|\__,_|_|  \___|_| |_|_| |_|\___|\__,_|\__,_|\____|_|\__,_|___/\__\___|_|  |___/
 #
-
-# Offline upgrade of search head members, needs to be prepared in the inventory file.
-# Not the default upgrade method.
-- name: Upgrade Search Head Members - Offline Upgrade
-  hosts: searchhead_members:&upgrade_shclusters_offline
-  become: true
-  become_method: ansible.builtin.sudo
-  become_user: "{{ splunk_user }}"
-  gather_facts: false
-  pre_tasks:
-    - name: Include role to install splunk enterprise
-      ansible.builtin.include_role:
-        name: deslicer.splunk.enterprise
-        tasks_from:
-          offline_upgrade.yml
-      when:
-        - shc_upgrade_method | default('rolling') == 'offline'
-
-# Offline upgrade of search head deployer, needs to be prepared in the inventory file.
-# Not the default upgrade method.
-- name: Upgrade Search Head Deployers
-  hosts: searchhead_deployers:&upgrade_shclusters_offline
-  become: true
-  become_method: ansible.builtin.sudo
-  become_user: "{{ splunk_user }}"
-  gather_facts: false
-  pre_tasks:
-    - name: Include tasks to wait for connection to host
-      ansible.builtin.include_role:
-        name: deslicer.splunk.core
-        tasks_from:
-          wait_for_connection.yml
-
-    - name: Setup network facts
-      ansible.builtin.setup:
-        gather_subset: 'network'
-
-    - name: Include role to install splunk enterprise
-      ansible.builtin.include_role:
-        name: deslicer.splunk.enterprise
-      when:
-        - shc_upgrade_method | default('rolling') == 'offline'
 
 # The precheck task will create the dynamic shcluster_captain group.
 - name: Upgrade Search Head Members Cluster - Non Captain Members - SHC C1
@@ -457,7 +414,7 @@
       ansible.builtin.include_role:
         name: deslicer.splunk.core
         tasks_from:
-          splunk_version.yml
+          get_splunk_version.yml
       when:
         - shc_upgrade_kvstore_engine | default(false)
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.4.0', '<')

@@ -80,8 +80,6 @@ Tasks
   * Start rolling upgrade on Search Head Member
 * `shcluster/shcluster_rolling_upgrade.yml`
   * Perform the steps to execute the rolling upgrade of a search head member.
-* `shcluster/shcluster_member_by_member_upgrade.yml`
-  * Not implemented, task file as place holder
 * `shcluster/finalize_upgrade.yml`
   * Finalize rolling upgrade of Splunk Search Head Members
 
@@ -90,8 +88,6 @@ Files
 
 * `bin/splunk_upgrade_cleanup.sh`
   * Helper script to cleanup files added by older versions and no longer applicable.
-* `sudo_ansible_helper.sh`
-  * Placeholder, not developed yet.
 * `dat/untracked_files_splunk_VERSION_Linux.diff`
   * One file per linux version that has a large diff of current and earlier splunk versions. If upgrading to a version that has no diff file, the cleanup will be skipped and can be executed later.
 
