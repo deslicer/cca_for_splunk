@@ -1,100 +1,107 @@
-cca.splunk.enterprise-install
-=========
+# deslicer.splunk.enterprise
 
-Start, stops, installs and upgrade Splunk Enterprise. Manage cluster specific commands for rolling upgrades.
-The role supports Ansible check mode and will run through all tasks and validate all things that is possible to test without actually performing the upgrade.
+Start, stop, install, and upgrade Splunk Enterprise. Manage cluster-specific commands for rolling upgrades.
 
-Requirements
-------------
+This role supports Ansible check mode and will run through all tasks and validate everything possible without actually performing the upgrade.
 
-Splunk tgz file needs to be stored in the infrastructure directory of `splunk/var/images/` where they will be matched by the `deslicer.splunk.enterprise_version` specified in the hosts inventory file.
+## Requirements
 
-Role Variables
---------------
+Splunk tgz file needs to be stored in the infrastructure directory at `splunk/var/images/` where they will be matched by the `splunk_enterprise_version` specified in the hosts inventory file.
 
-The variable `deslicer.splunk.enterprise_version` controls what version of Splunk that should be initially installed and also target version during a Splunk upgrade. `deslicer.splunk.enterprise_version` is set in the ansible inventory file `environments/ENVIRONMENT_NAME/hosts`. It can be set on group or host level. Let you control splunk version on a server basis if needed.
-
-### group_vars/all/cca_splunk_secrets
-* `filename`
-  * Description
-
-### group_vars/all/env_specific
-* `absolute_infrastructure_repo_path`
-  * Description
-* `splunk_cli_user`
-  * Splunk cli user, can be different from Splunk admin user
-* `splunk_cli_user_password`
-  * Splunk cli user password, can be different from Splunk admin user password
-
-### group_vars/all/default
-* `hide_password`
-  * Description
-* `splunk_path`
-  * Install path for Splunk Enterprise
-* `start_command`
-  * Command to start splunk and accept license
-* `stop_command`
-  * Command to stop splunk
-* `cca_splunk_var_tmp`
-   * Temp directory for CCA and Splunk files
-* `systemd_enterprise_name`
- * Name of systemd service for splunk
+## Role Variables
 
 ### group_vars/hosts
-* `deslicer.splunk.enterprise_version`
-  * Set the desired version of Splunk Enterprise
+| Variable | Description |
+|----------|-------------|
+| `splunk_enterprise_version` | Set the desired version of Splunk Enterprise |
+
+### group_vars/all/cca_splunk_secrets
+| Variable | Description |
+|----------|-------------|
+| `splunk_cli_user` | Splunk CLI user (can differ from admin user) |
+| `splunk_cli_user_password` | Splunk CLI user password |
+
+### group_vars/all/default
+| Variable | Description |
+|----------|-------------|
+| `hide_password` | Suppress password output in logs |
+| `splunk_path` | Install path for Splunk Enterprise |
+| `start_command` | Command to start Splunk and accept license |
+| `stop_command` | Command to stop Splunk |
+| `cca_splunk_var_tmp` | Temp directory for CCA and Splunk files |
+| `systemd_enterprise_name` | Name of systemd service for Splunk |
 
 ### group_vars/all/linux
-* `splunk_user`
-  * Defines the splunk user
+| Variable | Description |
+|----------|-------------|
+| `splunk_user` | Defines the Splunk user |
 
-### Configurable variables
-* `synchronize_module_use_ssh_args`
-  * Set synchronize arguments
+### Configurable Variables
+| Variable | Description |
+|----------|-------------|
+| `synchronize_module_use_ssh_args` | Set synchronize arguments |
+| `download_from_remote_file_storage` | Enable remote file download instead of staging |
 
+## Usage
 
-Tasks
-------------
+### Include the Role
 
-### Main
-* `splunk_status.yml`
-  * Checks status of Splunk and set fact if enterprise_upgrade should be performed. Checks if the system is managed by CCA, if not then it fails the task by the assert in `prompt_unmanaged.yml`
-* `stage_install_files.yml`
-  * Copy files from CCA manager to each Splunk server.
-* `ensure_splunk_version.yml`
-  * When enterprise_upgrade is flagged, splunk is stopped, tar file extracted, redundant files removed and splunk started. On Cluster Peers a offline command is issued instead of a stop command.
-* `ensure_splunk_status_started.yml`
-  * Start splunk from command line
+```yaml
+- name: Ensure Splunk is installed
+  ansible.builtin.include_role:
+    name: deslicer.splunk.enterprise
+```
 
+### Include Specific Tasks
 
-### Standalone tasks
-* `prompt_unmanaged.yml`
-  * Assert if the server is managed by CCA
-* `cluster/init_upgrade.yml`
-  * Start rolling upgrade of Splunk Index Cluster
-* `cluster/finalize_upgrade.yml`
-  * Finalize rolling upgrade of Splunk Index Cluster
-* `shcluster_upgrade_handler.ym`
-  * Selects shcluster upgrade task based on upgrade method.
-* `shcluster/init_upgrade.yml`
-  * Start rolling upgrade on Search Head Member
-* `shcluster/shcluster_rolling_upgrade.yml`
-  * Perform the steps to execute the rolling upgrade of a search head member.
-* `shcluster/finalize_upgrade.yml`
-  * Finalize rolling upgrade of Splunk Search Head Members
+```yaml
+- name: Initialize cluster upgrade
+  ansible.builtin.include_role:
+    name: deslicer.splunk.enterprise
+    tasks_from: cluster/init_upgrade.yml
+```
 
-Files
-------------
+## Tasks
 
-* `bin/splunk_upgrade_cleanup.sh`
-  * Helper script to cleanup files added by older versions and no longer applicable.
-* `dat/untracked_files_splunk_VERSION_Linux.diff`
-  * One file per linux version that has a large diff of current and earlier splunk versions. If upgrading to a version that has no diff file, the cleanup will be skipped and can be executed later.
+### Main Tasks (main.yml)
+| Task | Description |
+|------|-------------|
+| `splunk_status.yml` | Checks status of Splunk and sets upgrade flag |
+| `stage_install_files.yml` | Copy files from CCA manager to Splunk servers |
+| `download_install_files.yml` | Download install files from remote storage |
+| `ensure_splunk_version.yml` | Stop Splunk, extract tar, remove redundant files, start Splunk |
+| `ensure_splunk_status_started.yml` | Start Splunk from command line |
+| `ansible_managed.yml` | Mark host as managed by Ansible |
 
-Dependencies
-------------
+### Standalone Tasks
+| Task | Description |
+|------|-------------|
+| `kvstore_upgrade_status.yml` | Check KVStore upgrade status during upgrades |
+| `shcluster_upgrade_handler.yml` | Select shcluster upgrade task based on upgrade method |
 
-cca.core.splunk
+### Cluster Tasks (cluster/)
+| Task | Description |
+|------|-------------|
+| `init_upgrade.yml` | Start rolling upgrade of Splunk Index Cluster |
+| `finalize_upgrade.yml` | Finalize rolling upgrade of Splunk Index Cluster |
+
+### Search Head Cluster Tasks (shcluster/)
+| Task | Description |
+|------|-------------|
+| `init_upgrade.yml` | Start rolling upgrade on Search Head Member |
+| `shcluster_rolling_upgrade.yml` | Execute rolling upgrade of a search head member |
+| `finalize_upgrade.yml` | Finalize rolling upgrade of Splunk Search Head Members |
+
+## Files
+
+| File | Description |
+|------|-------------|
+| `bin/splunk_upgrade_cleanup.sh` | Helper script to cleanup files from older versions |
+| `dat/untracked_files_splunk_VERSION_Linux.diff` | Diff files per Linux version for cleanup |
+
+## Dependencies
+
+- deslicer.splunk.core
 
 ## License and Attribution
 
@@ -104,11 +111,6 @@ originally developed by Innovation Fleet.
 **Original License:** MIT License - Copyright (c) 2024 Innovation Fleet
 
 This role has been adapted for use with the Deslicer Automation Platform by Deslicer AB.
-Modifications include:
-- Role names updated for Ansible Galaxy collection compatibility
-- Integration with Deslicer API for file distribution
-
-This software remains licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 **Copyright (c) 2024 Innovation Fleet**
-**Modifications Copyright (c) 2026 Deslicer AB**
+**Modifications Copyright (c) 2025 Deslicer AB**

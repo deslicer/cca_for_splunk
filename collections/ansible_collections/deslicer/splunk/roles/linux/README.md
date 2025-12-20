@@ -1,148 +1,191 @@
-deslicer.deslicer.splunk.linux
-==============
+# deslicer.splunk.linux
 
-This role is prepping an installed server with the settings that is required to run Splunk as a service as a non privileged user.
+This role prepares Linux servers with the settings required to run Splunk as a service as a non-privileged user.
+
+## Overview
+
+The role handles:
+- User and group configuration for Splunk
+- Systemd service configuration with cgroup support
+- Firewall configuration (firewalld)
+- System limits (ulimits)
+- Polkit rules for service management
+- THP (Transparent Huge Pages) disabling
+- SELinux configuration
+- NTP configuration with Chrony
+- OS patching and updates
 
 ### Customization
-Options exists to control which tasks that should be executed and to add multiple custom roles to configure the server as you like.
 
-Requirements
-------------
+Options exist to control which tasks should be executed and to add multiple custom roles to configure the server as needed.
 
-The servers OS and version needs to be one of the supported ones.
-  - Centos 8 Steam
-  - RHEL 8
-  - Amazon Linux 2
+## Requirements
 
-Mount points needs to be created for the `splunk_path` on all Splunk servers, a separate filesystem is recommended but not enforced.
-On Cluster Index peers two additional mount points are need, align with `splunk_volume_path_hot` and `splunk_volume_path_cold` defined in `environments/ENVIRONMENT_NAME/hosts`. Same here, separate file systems is highly recommended but not enforced.
+### Supported Operating Systems
+- RHEL 8, 9
+- CentOS Stream 8, 9
+- Amazon Linux 2, 2023
+- Ubuntu 20.04, 22.04, 24.04
+- Debian 11, 12
 
-The initial account that is used to setup the server with users and services needs to have SUDO ALL access to the server. If you don't have it at this point, the server team could possibly run the ansible playbook that include this role and handover the server when completed.
+### Prerequisites
+- Mount point for `splunk_path` on all Splunk servers (separate filesystem recommended)
+- On Cluster Index peers: additional mount points for `splunk_volume_path_hot` and `splunk_volume_path_cold`
+- Initial account with SUDO ALL access for setup
 
-Role Variables
---------------
-
-Description
+## Role Variables
 
 ### group_vars/all/linux
-* `external_bootstrap_pre_roles`
-  * Possibility to inject custom roles early in the server bootstrap configuration process. Add role names as lists and store them outside the cca_for_splunk repo. Configure ansible role search paths accordingly.
-* `external_bootstrap_roles`
-  * Possibility to inject custom roles in the middle of the server bootstrap configuration process. Add role names as lists and store them outside the cca_for_splunk repo. Configure ansible role search paths accordingly.
-*  `external_bootstrap_post_roles`
-   * Possibility to inject custom roles late in the server bootstrap configuration process. Add role names as lists and store them outside the cca_for_splunk repo. Configure ansible role search paths accordingly.
-* `cca_splunk_manager_user`
-  * Setup manager user on splunk servers during bootstrap. This user is used to connect to the server and from there ansible sudoes to splunk to perform required configuration.
-* `cca_splunk_manager_user_uid`
-  * Manager users UID
-* `cca_splunk_manager_user_dir`
-  * Manager users home dir
-* `cca_splunk_manager_group_name`
-  * Manager users group name
-* `cca_splunk_manager_gid`
-  * Manager users GID
-* `splunk_user`
-  * Name of splunk user, normally just `splunk`
-* `splunk_user_uid`
-  * Splunk users UID
-* `splunk_user_dir`
-  * Splunk users home is that same as `splunk_path`
-* `splunk_user_group_name`
-  * Splunk user group name is the same as `splunk_user`
-* `splunk_user_gid`
-  * Splunk users GID is normally the same as UID
-* `cca_baseline_software`
-  * Baseline software that is needed by CCA to perform the required work. Example of required software
-    - 'rsync'
-    - 'git'
-    - 'bind-utils'
-    - 'nc'
+| Variable | Description |
+|----------|-------------|
+| `external_bootstrap_pre_roles` | Custom roles to inject early in bootstrap |
+| `external_bootstrap_roles` | Custom roles to inject in middle of bootstrap |
+| `external_bootstrap_post_roles` | Custom roles to inject late in bootstrap |
+| `cca_splunk_manager_user` | Manager user for Splunk servers |
+| `cca_splunk_manager_user_uid` | Manager user UID |
+| `cca_splunk_manager_user_dir` | Manager user home directory |
+| `cca_splunk_manager_group_name` | Manager user group name |
+| `cca_splunk_manager_gid` | Manager user GID |
+| `splunk_user` | Name of Splunk user (normally `splunk`) |
+| `splunk_user_uid` | Splunk user UID |
+| `splunk_user_dir` | Splunk user home (same as `splunk_path`) |
+| `splunk_user_group_name` | Splunk user group name |
+| `splunk_user_gid` | Splunk user GID |
+| `cca_baseline_software` | Baseline software needed by CCA (rsync, git, etc.) |
 
-* `control`
-  * `linux_configuration`
-  * Controls wether these tasks should be executed or not. Read up on the tasks files to find if they should be disabled or not. Not all tasks are created. If a changed behaviour is wanted of one of the included tasks, disable them in this file by changing the value from true to false. Then add a custom role and the changed tasks in it and add it to the external_bootrap role list.
+### Control Variables
+The `control.linux_configuration` dictionary controls which tasks are executed:
 
-### group_vars/all/env_specific
-* `filename`
-  * Description
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `splunk_user` | `true` | Configure Splunk user |
+| `configure_firewall` | `false` | Configure firewalld |
+| `disable_firewall` | `false` | Disable firewalld |
+| `server_hardening` | `true` | Configure base hardening |
+| `baseline_software` | `true` | Install baseline software |
+| `splunk_limits` | `true` | Configure ulimits |
+| `splunk_version` | `true` | Get Splunk version |
+| `splunk_service` | `true` | Configure systemd service |
+| `splunk_polkit` | `true` | Configure polkit rules |
+| `thp` | `true` | Disable THP |
+| `selinux` | `true` | Configure SELinux |
+| `sudoers` | `true` | Configure sudoers |
+| `configure_ntp` | `false` | Configure NTP with Chrony |
 
-### group_vars/all/default
-* `filename`
-  * Description
+## Usage
 
-### group_vars/all/general_settings
-* `filename`
-  * Description
+### Include the Role
 
-### group_vars/GROUP_VARS_FILES
-* `filename`
-  * Description
+```yaml
+- name: Configure Linux server for Splunk
+  ansible.builtin.include_role:
+    name: deslicer.splunk.linux
+```
 
-### host_vars/INVENTORY_HOSTNAME
-* `filename`
-  * Description
+### Include Specific Tasks
 
-### Configurable variables
-* `filename`
-  * Description
+```yaml
+- name: Reboot server if needed
+  ansible.builtin.include_role:
+    name: deslicer.splunk.linux
+    tasks_from: server_reboot_handler.yml
+```
 
+## Tasks
 
-Vars
-------------
+### Main Tasks (main.yml)
+| Task | Description |
+|------|-------------|
+| `get_facts.yml` | Gather host facts and set variables |
+| `validate_supported_os_versions.yml` | Validate OS against supported versions |
+| `include_external_pre_roles.yml` | Execute external roles at beginning |
+| `configure_splunk_user.yml` | Configure Splunk user |
+| `include_external_roles.yml` | Execute external roles in middle |
+| `dot_bootstrap.yml` | Mark server as bootstrapped |
+| `configure_firewall.yml` | Configure internal firewall |
+| `configure_server_hardening.yml` | Base server hardening |
+| `configure_splunk_limits.yml` | Set ulimits for Splunk user |
+| `configure_splunk_service.yml` | Configure systemd service |
+| `configure_polkit.yml` | Install and configure polkit |
+| `configure_thp.yml` | Disable Transparent Huge Pages |
+| `configure_selinux.yml` | Configure SELinux state |
+| `configure_sudoers.yml` | Configure sudo rights |
+| `include_external_post_roles.yml` | Execute external roles at end |
+| `configure_fs_rights.yml` | Ensure owner on Splunk directories |
+| `configure_ntp.yml` | Configure NTP with Chrony |
 
-Vars is used to specify OS dependent variables that can be override'd if needed.
+### Standalone Tasks
+| Task | Description |
+|------|-------------|
+| `check_pending_actions.yml` | Check for pending reboot or service restart |
+| `server_reboot_handler.yml` | Reboot server and wait for return |
+| `set_reboot_flag.yml` | Set flag to trigger reboot |
+| `standalone_reboot.yml` | Reboot server and cleanup state file |
+| `validate_available_disk_space.yml` | Validate disk space for operations |
 
-* `default.yml`
-  * Set default variables
-* `Amazon-2`
-  * Set specific variables for Amazon-2 Linux servers
+### Firewalld Tasks (firewalld/)
+| Task | Description |
+|------|-------------|
+| `ensure_firewalld.yml` | Install/upgrade firewalld |
+| `configure_firewalld.yml` | Configure firewalld for Splunk |
+| `disable_firewalld.yml` | Disable firewalld service |
 
+### Systemd Tasks (systemd/)
+| Task | Description |
+|------|-------------|
+| `main.yml` | Main systemd configuration entry |
+| `manage_cgroup_version.yml` | Manage cgroup version for Splunk compatibility |
+| `manage_cgroup_v1.yml` | Configure cgroup v1 for older Splunk versions |
+| `manage_cgroup_v2.yml` | Configure cgroup v2 for Splunk 9.4+ |
+| `splunkd_service.yml` | Template Splunkd.service file |
+| `thp_service.yml` | Configure systemd service to disable THP |
 
-Tasks
-------------
+### Polkit Tasks (polkit/)
+| Task | Description |
+|------|-------------|
+| `apt/ensure_polkit.yml` | Install polkit on Debian-based systems |
+| `dnf/ensure_polkit.yml` | Install polkit with dnf |
+| `yum/ensure_polkit.yml` | Install polkit with yum |
+| `polkit_rules.yml` | Configure polkit rules for RPM-based systems |
+| `policykit-1_rules.yml` | Configure polkit rules for Debian-based systems |
 
-### Main
-* `validate_supported_os_versions.yml`
-  * Validate ansible facts against CCA supported OS'es and versions
-* `include_external_pre_roles.yml`
-  * Execute external roles at the beginning of main
-* `configure_splunk_user.yml`
-  * Configure splunk user
-* `include_external_roles.yml`
-  * Execute external roles
-* `dot_bootstrap.yml`
-  * Mark this server instance as bootstrapped
-* `configure_firewall.yml`
-  * Configure internal firewall, by changing default zone
-* `configure_server_hardening.yml`
-  * Not defined
-* `configure_baseline_software.yml`
-  * Execute external roles in the middle of main
-* `configure_splunk_limits.yml`
-  * Set ulimits for Splunk user
-* `configure_splunk_service.yml`
-  * Include systemd/main.yml
-*  `systemd/spunkd_service.yml`
-   * Template out Splunkd.service and Splunk.service.d/limits.conf
-* `configure_polkit.yml`
-  * Install polkit and includes polkit/polkit_rules.yml
-* `polkit/polkit_rules.yml`
-  * Template out polkit rule configuration for Splunk user
-* `configure_thp.yml`
-  * Disables THP by building and updating grub.cfg
-* `configure_sudoers.yml`
-  * Configure sudo all for Splunk manager user
-* `include_external_post_roles.yml`
-  * Execute external roles at last in the main
-* `configure_ntp.yml`
-  * Configure NTP client on host, with Chrony program
+### NTP Tasks (ntp/)
+| Task | Description |
+|------|-------------|
+| `apt/install_chrony.yml` | Install Chrony on Debian-based systems |
+| `dnf/install_chrony.yml` | Install Chrony with dnf |
+| `yum/install_chrony.yml` | Install Chrony with yum |
+| `ensure_chrony.yml` | Enable and start Chrony service |
+| `configure_chrony.yml` | Configure Chrony settings |
 
-### Standalone tasks
-* `server_reboot_handler.yml`
-  * Calls `check_pending_actions.yml` reboots server and wait until it's up
+### Package Tasks (package/)
+| Task | Description |
+|------|-------------|
+| `apt/configure_baseline_software.yml` | Install baseline software with apt |
+| `dnf/configure_baseline_software.yml` | Install baseline software with dnf |
+| `yum/configure_baseline_software.yml` | Install baseline software with yum |
 
-Dependencies
-------------
+### Update Tasks (update/)
+| Task | Description |
+|------|-------------|
+| `apt/check_for_os_updates.yml` | Check for OS updates with apt |
+| `apt/os_update.yml` | Apply OS updates with apt |
+| `dnf/check_for_os_updates.yml` | Check for OS updates with dnf |
+| `dnf/os_update.yml` | Apply OS updates with dnf |
+| `yum/check_for_os_updates.yml` | Check for OS updates with yum |
+| `yum/os_update.yml` | Apply OS updates with yum |
+
+## Vars
+
+OS-dependent variables that can be overridden:
+
+| File | Description |
+|------|-------------|
+| `default.yml` | Default variables |
+| `Amazon-2.yml` | Specific variables for Amazon Linux 2 |
+
+## Dependencies
+
 None
 
 ## License and Attribution
@@ -153,11 +196,6 @@ originally developed by Innovation Fleet.
 **Original License:** MIT License - Copyright (c) 2024 Innovation Fleet
 
 This role has been adapted for use with the Deslicer Automation Platform by Deslicer AB.
-Modifications include:
-- Role names updated for Ansible Galaxy collection compatibility
-- Integration with Deslicer API for file distribution
-
-This software remains licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 **Copyright (c) 2024 Innovation Fleet**
-**Modifications Copyright (c) 2026 Deslicer AB**
+**Modifications Copyright (c) 2025 Deslicer AB**
