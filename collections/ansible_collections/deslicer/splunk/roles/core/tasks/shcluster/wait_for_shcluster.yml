@@ -1,5 +1,5 @@
 ---
-# tasks file for cca.splunk.role-searchhead
+# tasks file for deslicer.splunk.core
 #
 # Description:
 #
@@ -14,7 +14,7 @@
 
 - name: Include task to check if Search head cluster is boot strapped
   ansible.builtin.include_role:
-    name: cca.splunk.role-searchhead
+    name: deslicer.splunk.core
     tasks_from: check_captain_init_status.yml
 
 - name: Set fact if shcluster C1 is bootstrapped
