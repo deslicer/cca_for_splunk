@@ -1,0 +1,18 @@
+---
+# tasks file for cca.core.linux
+#
+# Description: Remove root-owned per-host staging (Splunk tarball, LVM helper scripts, etc.)
+#              so later runs without full privilege are not blocked under /var/tmp.
+
+#
+# Prerequisite:
+#
+# Author: SET_USER_MANUALLY
+#
+# Release: 2026.1.5
+
+
+- name: Remove cca_splunk_var_tmp directory if present
+  ansible.builtin.file:
+    path: "{{ cca_splunk_var_tmp | default('/var/tmp/' ~ inventory_hostname) }}"
+    state: absent

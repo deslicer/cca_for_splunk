@@ -15,6 +15,12 @@ def validate_splunk_conf(data, invalid_config_regex, enable_precheck=True):
             item.get('value', ''),
             item.get('state', 'present'),
         )
+        if section is None:
+            section = ''
+        if option is None:
+            option = ''
+        if value is None:
+            value = ''
 
         # Perform the checks
         if re.search(invalid_config_regex, path) and state != 'absent':

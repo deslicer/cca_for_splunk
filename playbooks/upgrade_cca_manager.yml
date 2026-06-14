@@ -59,6 +59,12 @@
       tags:
         - skip_ansible_lint
 
+    - name: Install Ansible collection community.sops
+      ansible.builtin.command:
+        cmd: "{{ venv_path }}/bin/ansible-galaxy collection install community.sops"
+      tags:
+        - skip_ansible_lint
+
     - name: Set mitogen major.minor version
       ansible.builtin.set_fact:
         mitogen_major_minor: "{{ cca_ansible_release.split('.')[0] }}.{{ cca_ansible_release.split('.')[1] }}"

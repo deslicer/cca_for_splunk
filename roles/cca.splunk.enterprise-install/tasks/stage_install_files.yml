@@ -7,14 +7,21 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.2
+# Release: 2026.2.1
+
+- name: Resolve Splunk enterprise install images directory
+  ansible.builtin.set_fact:
+    _cca_splunk_enterprise_install_images_dir: "{{ splunk_enterprise_install_images_path if (
+        splunk_enterprise_install_images_path is defined
+        and splunk_enterprise_install_images_path | length > 0
+      ) else absolute_infrastructure_repo_path ~ '/splunk/var/images/' }}"
 
 - name: Find Splunk install file in repo directory
   become: false
   delegate_to: localhost
   connection: local
   ansible.builtin.find:
-    paths: "{{ absolute_infrastructure_repo_path }}/splunk/var/images/"
+    paths: "{{ _cca_splunk_enterprise_install_images_dir }}"
     patterns: "splunk-{{ splunk_enterprise_version }}-*64.tgz"
   register: find_cca_splunk_tgz
 
@@ -74,7 +81,7 @@
 
 - name: Stage Splunk tgz file at initial install or upgrade of Splunk Enterprise
   ansible.posix.synchronize:
-    src: "{{ absolute_infrastructure_repo_path }}/splunk/var/images/"
+    src: "{{ _cca_splunk_enterprise_install_images_dir }}"
     dest: "{{ cca_splunk_var_tmp }}/"
     recursive: true
     checksum: true

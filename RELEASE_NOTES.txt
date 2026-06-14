@@ -31,6 +31,35 @@
 
     Release notes:
 
+    2026.2.1
+              - Address https://advisory.splunk.com/advisories/SVD-2026-0603 score 9.8. Upgrade to 10.0.7 or 10.2.4
+              - Bumped Splunk Enterprise versions. Splunk 9.4.12, 10.0.7 or 10.2.4 is recommended for production.
+              - Added cleanup of per-host Splunk staging directories to avoid stale root-owned files blocking later runs.
+              - Added configurable Splunk Enterprise install image path for environments storing binaries outside the
+                default repository path.
+
+              Bug fixes:
+                * Corrected certificate validation handling when staging certificate or key files are not yet present.
+                * Corrected loop variable to handle additional local splunk users.
+
+
+    2026.1.5
+              - Added ability to use sops encrypted files, change to .enc.conf file ending of the files. And it
+                gets decrypted when deployed to the target host. Only files that is part of selectable_apps
+                or versioned_apps is currently supported. Update your local settings from the updated file in
+                templates directory onboarding_template/environments/ENVIRONMENT_NAME/group_vars/all/onboarding
+                and env_specific. Consult support before implementing encrypted files.
+                Run ./cca_ctrl --upgrade from your CCA main repository and select the playbook
+                'upgrade_cca_manager.yml' to get all prerequisites.
+              - Adding 'SPLUNK_ORCHESTRATOR_URL' to splunk-launch.conf for general_settings as needed for spl2
+                support.
+                Copy templates/infrastructure_template/environments/ENVIRONMENT_NAME/group_vars/all/general_setting
+                to your environment general_settings file.
+
+              Bug fixes:
+                * Corrected incorrectly inserted stanza name for splunk-lauch.conf, introduced in 2026.1.1
+
+
     2026.1.4  - Improved ansible command arguments where splunk cli authentication is needed to better support
                 special character in passwords.
               - Added improved support for Splunk admin password updates. Note that an admin password update on
@@ -72,13 +101,13 @@
     2026.1.1
               - Added support for Splunk Enterprise 10.2
               - New section for splunk-launch.conf, use the updated template before upgrading to Splunk Enterprise 10.2+
-                Copy templates/infrastructure_templates/ENVIRONMENT_NAME/group_vars/all/general_settings to your
+                Copy templates/infrastructure_template/environments/ENVIRONMENT_NAME/group_vars/all/general_settings to your
                 environment general_settings file.
               - Splunk 9.4.7 or 10.0.2 is recommended for production.
               - Enhanced cluster status check with preflight validation and configurable retry delay.
               - Improved deployment server state file management with proper path handling and cleanup.
               - Added check_deletion_threshold filter plugin for safer app deletion validation. See
-                templates/onboarding_templates/ENVIRONMENT_NAME/group_vars/all/onboarding for tuning
+                templates/onboarding_template/environments/ENVIRONMENT_NAME/group_vars/all/onboarding for tuning
                 variables.
               - Enhanced preflight output normalization with string filter for better reliability.
               - Improved cluster status check integration when deploying manager apps with proper variable handling.
@@ -111,8 +140,8 @@
 
       2025.3.3
               - Added shcluster label to search head members, update you local searchhead_members_shcluster_c*
-                files from templates/infrastructure_template/ENVIRONMENT_NAME/group_vars/ and shcluster_label
-                to your [searchhead_members_shcluster_c*:vars] section in your hosts file.
+                files from templates/infrastructure_template/environments/ENVIRONMENT_NAME/group_vars/ and
+                shcluster_label to your [searchhead_members_shcluster_c*:vars] section in your hosts file.
               - Added target attribute for all deployment groups and app lists.
               - Enhanced the default rsync logic to avoid deleting files on Deployment Servers if rsync opts are
                 misconfigured.

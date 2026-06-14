@@ -1,7 +1,10 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_onboarding_env_specific_file_version: '2022.3.1'
+cca_onboarding_env_specific_file_version: '2026.1.5'
 
+# SOPS Age keyfile path
+# Default: CCA manager $HOME; override with ci_sops_encrypt_age_keyfile in hosts file.
+cca_sops_encrypt_age_keyfile: "{{ lookup('env', 'HOME') }}/secrets/{{ environment_name }}_age.key"
 # Playbook tuning parameters
 # TUNE Adapt settings to match performance or setup of your environment.
 preflight_command_retries: '100'
