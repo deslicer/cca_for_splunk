@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2026.1.4
+# Release: 2026.2.1
 
 
 - name: Add admin user as local cli user
@@ -106,7 +106,7 @@
           (
             cca_splunk_local_users_managed.results | default([])
             | selectattr('changed', 'equalto', true)
-            | map(attribute='item')
+            | map(attribute='user')
             | map(attribute='name')
             | map('lower')
             | list
@@ -118,7 +118,7 @@
           (
             cca_splunk_local_users_group_managed.results | default([])
             | selectattr('changed', 'equalto', true)
-            | map(attribute='item')
+            | map(attribute='user')
             | map(attribute='name')
             | map('lower')
             | list
@@ -130,7 +130,7 @@
           (
             cca_splunk_local_users_removed.results | default([])
             | selectattr('changed', 'equalto', true)
-            | map(attribute='item')
+            | map(attribute='user')
             | map(attribute='name')
             | map('lower')
             | list
@@ -142,7 +142,7 @@
           (
             cca_splunk_local_users_group_removed.results | default([])
             | selectattr('changed', 'equalto', true)
-            | map(attribute='item')
+            | map(attribute='user')
             | map(attribute='name')
             | map('lower')
             | list

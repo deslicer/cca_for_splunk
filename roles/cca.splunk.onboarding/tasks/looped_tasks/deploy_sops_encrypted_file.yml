@@ -1,0 +1,131 @@
+---
+# tasks file for cca.splunk.onboarding
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2026.1.5
+
+# SOPS decrypt (community.sops.sops) uses --age, which requires a private key; pass it via
+# cca_sops_encrypt_age_keyfile (see group_vars / ci_sops_encrypt_age_keyfile).
+- name: Assert cca_sops_encrypt_age_keyfile is set (SOPS decrypt needs an age private key)
+  ansible.builtin.assert:
+    that:
+      - cca_sops_encrypt_age_keyfile is defined
+      - (cca_sops_encrypt_age_keyfile | string | trim | length) > 0
+    fail_msg: >-
+      Decrypting SOPS-encrypted app files (e.g. *.enc.conf) needs an age private key on the
+      control node. Set variable cca_sops_encrypt_age_keyfile to the key path (e.g. from
+      group_vars, ci_sops_encrypt_age_keyfile, or extra vars). See documentation/age_cli_install.md.
+  delegate_to: localhost
+  connection: local
+  become: false
+
+- name: Stat age private key for SOPS (local)
+  ansible.builtin.stat:
+    path: "{{ cca_sops_encrypt_age_keyfile | expanduser }}"
+    follow: true
+  delegate_to: localhost
+  connection: local
+  become: false
+  register: cca_sops_age_key_stat
+
+- name: Assert age private key file exists
+  ansible.builtin.assert:
+    that:
+      - cca_sops_age_key_stat.stat.exists
+      - cca_sops_age_key_stat.stat.isreg
+    fail_msg: >-
+      SOPS/age private key is missing or is not a readable file at: {{ cca_sops_encrypt_age_keyfile | expanduser }}
+      (variable cca_sops_encrypt_age_keyfile). The user running Ansible on the control node must
+      be able to read this path. Create or restore the key and update the path.
+  delegate_to: localhost
+  connection: local
+  become: false
+
+- name: "Reset per-iteration decrypt facts (looped include must not inherit previous file's values)"
+  ansible.builtin.set_fact:
+    _decrypted_sops_body: null
+    _sops_output_type: null
+    _sops_is_binary: null
+
+- name: Stat SOPS source file (local)
+  ansible.builtin.stat:
+    path: "{{ enc_file.path }}"
+  delegate_to: localhost
+  connection: local
+  become: false
+  register: enc_src_stat
+
+- name: Read SOPS source file (local) to inspect encryption layout
+  ansible.builtin.slurp:
+    src: "{{ enc_file.path }}"
+  delegate_to: localhost
+  connection: local
+  become: false
+  register: cca_sops_peek
+
+- name: Detect whole-file binary SOPS encryption by file content
+  ansible.builtin.set_fact:
+    _sops_is_binary: >-
+      {{
+        (cca_sops_peek.content | b64decode)
+        is match('\s*\{\s*"data"\s*:\s*"ENC\[')
+      }}
+
+- name: Pick SOPS output_type (content-detected binary first, then supported structured formats by extension)
+  vars:
+    _ext: "{{ enc_dest_rel_path.split('.') | last | lower }}"
+  ansible.builtin.set_fact:
+    _sops_output_type: >-
+      {{
+        'binary' if _sops_is_binary else
+        ('ini'    if _ext == 'conf' else
+         'yaml'   if _ext in ['yaml', 'yml'] else
+         'json'   if _ext == 'json' else
+         'dotenv' if _ext == 'env' else
+         'binary')
+      }}
+
+- name: Decrypt SOPS file with community.sops.sops (detected output_type)
+  ansible.builtin.set_fact:
+    _decrypted_sops_body: >-
+      {{
+        lookup('community.sops.sops',
+               enc_file.path,
+               sops_binary=app_deploy_sops_binary | default('sops'),
+               age_keyfile=cca_sops_encrypt_age_keyfile | default(omit),
+               output_type=_sops_output_type,
+               rstrip=(_sops_output_type != 'binary'))
+      }}
+  no_log: "{{ hide_password | default(true) }}"
+
+- name: Assert decrypted SOPS body is available
+  ansible.builtin.assert:
+    that:
+      - _decrypted_sops_body is not none
+      - (_decrypted_sops_body | string | length) > 0
+    fail_msg: >-
+      Could not decrypt SOPS file {{ enc_file.path }}.
+      Detected SOPS output_type: {{ _sops_output_type | default('n/a') }}
+      (content-detected whole-file binary: {{ _sops_is_binary | default('n/a') }}).
+      Check the age key ({{ cca_sops_encrypt_age_keyfile | default('<unset>') }}) and the
+      SOPS encryption format (binary/whole-file, INI, YAML, JSON, dotenv).
+
+- name: Write decrypted SOPS content to target
+  become: true
+  become_user: "{{ splunk_user }}"
+  ansible.builtin.copy:
+    content: "{{ _decrypted_sops_body }}"
+    dest: >-
+      {{
+        app_dest_dir ~ '/' ~
+        enc_dest_rel_path
+      }}
+    decrypt: false
+    mode: "{{ enc_src_stat.stat.mode }}"
+  no_log: "{{ hide_password | default(true) }}"
+  notify: notify standalone splunkd restart

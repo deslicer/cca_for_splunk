@@ -359,12 +359,30 @@ splunk_conf_general_settings:
     filename: splunk-launch.conf
     filepath: '{{ splunk_path }}/etc'
     sections:
-      - section: "{{ 'default' if (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('10.2.0', '>=') else 'none' }}"
+      - section: "{{ 'default'
+                    if
+                       (current_splunk_enterprise_version | default(splunk_enterprise_version) is version('10.2.0', '>='))
+                    else
+                      None }}"
         options:
          - option: 'SPLUNK_OS_USER'
            value: '{{ splunk_user }}'
          - option: 'SPLUNK_SERVER_NAME'
            value: 'Splunkd'
+         - option: 'SPLUNK_ORCHESTRATOR_URL'
+           value: "{{ splunk_orchestrator_url | default('http://localhost:9800') }}"
+           state: "{{ 'absent' if 'cluster_peers' in group_names else 'present' }}"
+           comment: >-
+             The Splunk platform uses port 9800 to connect to the Splunk data orchestrator. Default value is
+             http://localhost:9800. The data orchestrator is a new software component that parses and routes
+             SPL2 modules to splunkd.
+      - section: 'none'
+        options:
+         - option: ''
+           value: ''
+           state: 'absent'
+           comment: >-
+             Remove incorrect [none] stanza from pre-10.2 splunk-launch.conf
 
 
   - name: Splunk ui-tour.conf

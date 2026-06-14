@@ -22,6 +22,7 @@ The easiest way to setup a CCA manager from scratch is to use the `setup_cca_man
 * Preferably a dedicated user account e.g. `cca_manager` created on the server, accessible either directly of via sudo. The `cca_manager` user don't need any sudo rights.
 * Authentication via SSH key to a account on the server, the account needs sudo right to switch to `cca_manager` if it's not already authenticated as the `cca_manager` user.
 * Internet access to download pip packages, ansible-core, ansible collections, mitogen framework and cca_for_splunk repository.
+* Optional SOPS/age tooling: install **[SOPS](https://github.com/getsops/sops)** for SOPS-encrypted files and Ansible `community.sops`. For **`age-keygen`** / the age CLI, see [Installing age (standard package and Amazon Linux 2023)](/documentation/age_cli_install.md).
 
 Follow the instructions in [README - Setup CCA Manager](/roles/cca.setup.cca-manager/README.md) on how to run the standalone playbook.
 

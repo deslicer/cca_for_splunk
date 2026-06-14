@@ -10,12 +10,36 @@
 #   (intermediate -> root) required to validate the server cert.
 #
 # Author: Roger Lindquist (github.com/rlinq)
-# Release: 2025.3.1.2
+# Release: 2025.2.1
 
 - name: Run certificate validation in a block
   when:
     - cca_splunk_cert_enrollment_method != 'selfsigned'
   block:
+    - name: Stat staging private key on controller
+      ansible.builtin.stat:
+        path: '{{ cca_splunk_extension_certs_path }}/{{ privkey_staging_file_name }}'
+      delegate_to: localhost
+      connection: local
+      become: false
+      register: ssl_staging_privkey_stat
+
+    - name: Stat staging certificate on controller
+      ansible.builtin.stat:
+        path: '{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}'
+      delegate_to: localhost
+      connection: local
+      become: false
+      register: ssl_staging_cert_stat
+
+    - name: Set fact whether staging cert and key exist on controller
+      ansible.builtin.set_fact:
+        ssl_staging_both_exist: >-
+          {{
+            (ssl_staging_privkey_stat.stat.exists | default(false)) and
+            (ssl_staging_cert_stat.stat.exists | default(false))
+          }}
+
     - name: "Ensure proper EOL of file {{ privkey_staging_file_name }}"
       delegate_to: localhost
       connection: local
@@ -25,6 +49,7 @@
         regexp: '^# CCA Managed'
         dest: '{{ cca_splunk_extension_certs_path }}/{{ privkey_staging_file_name }}'
         insertafter: 'EOF'
+      when: ssl_staging_privkey_stat.stat.exists | default(false)
 
     - name: "Check how many certs are in {{ cert_staging_file_name }}"
       delegate_to: localhost
@@ -37,6 +62,7 @@
         executable: /bin/bash
       register: cert_count_result
       changed_when: false
+      when: ssl_staging_cert_stat.stat.exists | default(false)
 
     - name: "Trim file to only include the server certificate (if needed) - {{ cert_staging_file_name }}"
       delegate_to: localhost
@@ -54,9 +80,12 @@
            "{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}"
       args:
         executable: /bin/bash
-      when: cert_count_result.stdout | int > 1
+      when:
+        - ssl_staging_cert_stat.stat.exists | default(false)
+        - not (cert_count_result.skipped | default(false))
+        - (cert_count_result.stdout | default('0') | trim) | int > 1
       register: cert_trim_result
-      changed_when: cert_count_result.stdout | int > 1
+      changed_when: (cert_count_result.stdout | default('0') | trim) | int > 1
 
     - name: "Ensure proper EOL of file {{ cert_staging_file_name }}"
       delegate_to: localhost
@@ -67,6 +96,7 @@
         regexp: '^# CCA Managed'
         dest: '{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}'
         insertafter: 'EOF'
+      when: ssl_staging_cert_stat.stat.exists | default(false)
 
     - name: Assert that cca_splunk_extension_cert_rootca_fullpath is not empty for api enrollment method
       ansible.builtin.assert:
@@ -100,6 +130,7 @@
       tags:
         - skip_ansible_lint
       when:
+        - ssl_staging_cert_stat.stat.exists | default(false)
         - strict_x509_cert_validation_test | default(false) or
           (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('9.4.0', '>=')
 
@@ -193,6 +224,13 @@
         mode: '0600'
       check_mode: true
       register: final_cert_file_result
+      when: ssl_staging_both_exist | default(false)
+
+    - name: Mark final cert as needing update when staging material is missing on controller
+      ansible.builtin.set_fact:
+        final_cert_file_result:
+          changed: true
+      when: not (ssl_staging_both_exist | default(false))
 
     - name: "Set fact if cert is found and valid of type {{ cert_type }} "
       ansible.builtin.set_fact:

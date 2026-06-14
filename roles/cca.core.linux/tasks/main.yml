@@ -15,7 +15,7 @@
 #
 # Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.2.2.1
+# Release: 2026.2.1
 
 - name: Include task to get facts and vars
   ansible.builtin.include_tasks: get_facts.yml
@@ -115,3 +115,8 @@
   ansible.builtin.include_tasks: configure_ntp.yml
   when:
     - control.linux_configuration.configure_ntp | default(false)
+
+- name: Remove per-host Splunk staging directory (cca_splunk_var_tmp)
+  ansible.builtin.include_tasks: cleanup_cca_splunk_var_tmp.yml
+  when:
+    - cca_core_linux_cleanup_splunk_var_tmp | default(true)

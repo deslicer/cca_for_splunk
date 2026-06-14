@@ -7,36 +7,52 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2026.1.2
+# Release: 2026.1.5
 
 
-- name: Identify vaulted files to copy (local)
+# Ansible Vault: *.vault → plaintext path is basename without trailing .vault
+# SOPS (*.enc.*, e.g. inputs.enc.conf): plaintext path removes the first ".enc." segment;
+# decrypt uses lookup community.sops.sops: for *.conf first tries binary (whole-file) then ini (transparent);
+# age keys: cca_sops_encrypt_age_keyfile
+# (group_vars from env_specific.j2 / ci_sops_encrypt_age_keyfile).
+- name: Identify Ansible Vault and SOPS encrypted files to decrypt (local)
   delegate_to: localhost
   connection: local
   become: false
   ansible.builtin.find:
     paths: "{{ app_src_dir }}"
-    patterns: "*.vault"
+    patterns:
+      - "*.vault"
+      - "*.enc.*"
     file_type: file
     recurse: true
-  register: vaulted_files
+  register: encrypted_files
 
-- name: Initialize rsync excludes for decrypted vaulted outputs
+- name: Initialize rsync excludes for encrypted-files outputs
   ansible.builtin.set_fact:
-    vault_exclude_opts: []
+    encrypted_file_exclude_opts: []
   changed_when: false
 
-- name: Add rsync excludes for decrypted vaulted outputs
+- name: Add rsync excludes for encrypted-files outputs
   vars:
-    vault_rel_path: "{{ vault_file.path | replace(app_src_dir ~ '/', '') }}"
-    vault_dest_rel_path: "{{ vault_rel_path[:-6] if vault_rel_path.endswith('.vault') else vault_rel_path }}"
+    enc_rel_path: "{{ enc_file.path | replace(app_src_dir ~ '/', '') }}"
+    enc_dest_rel_path: >-
+      {{
+        enc_rel_path[:-6]
+        if enc_rel_path.endswith('.vault')
+        else (
+          enc_rel_path.split('.enc.', 1)[0] ~ '.' ~ enc_rel_path.split('.enc.', 1)[1]
+          if '.enc.' in enc_rel_path
+          else enc_rel_path
+        )
+      }}
   ansible.builtin.set_fact:
-    vault_exclude_opts: "{{ vault_exclude_opts + ['--exclude=' ~ vault_dest_rel_path] }}"
-  loop: "{{ vaulted_files.files | default([]) }}"
+    encrypted_file_exclude_opts: "{{ encrypted_file_exclude_opts + ['--exclude=' ~ enc_dest_rel_path] }}"
+  loop: "{{ encrypted_files.files | default([]) }}"
   loop_control:
-    loop_var: vault_file
+    loop_var: enc_file
   when:
-    - vaulted_files.matched | default(0) | int > 0
+    - encrypted_files.matched | default(0) | int > 0
   changed_when: false
 
 - name: Deploy the app via rsync
@@ -53,49 +69,89 @@
     archive: false
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
     rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
-    rsync_opts: "{{ app_rsync_opts + (vault_exclude_opts | default([])) }}"
+    rsync_opts: "{{ app_rsync_opts + (encrypted_file_exclude_opts | default([])) }}"
   notify: notify standalone splunkd restart
 
-- name: Ensure destination directories exist for vaulted files
+- name: Ensure destination directories exist to decrypted encrypted files
   become: true
   become_user: "{{ splunk_user }}"
   vars:
-    vault_rel_path: "{{ vault_file.path | replace(app_src_dir ~ '/', '') }}"
-    vault_dest_rel_path: "{{ vault_rel_path[:-6] if vault_rel_path.endswith('.vault') else vault_rel_path }}"
+    enc_rel_path: "{{ enc_file.path | replace(app_src_dir ~ '/', '') }}"
+    enc_dest_rel_path: >-
+      {{
+        enc_rel_path[:-6]
+        if enc_rel_path.endswith('.vault')
+        else (
+          enc_rel_path.split('.enc.', 1)[0] ~ '.' ~ enc_rel_path.split('.enc.', 1)[1]
+          if '.enc.' in enc_rel_path
+          else enc_rel_path
+        )
+      }}
   ansible.builtin.file:
     path: >-
       {{
         (
           app_dest_dir ~ '/' ~
-          vault_dest_rel_path
+          enc_dest_rel_path
         ) | dirname
       }}
     state: directory
     mode: '0755'
-  loop: "{{ vaulted_files.files | default([]) }}"
+  loop: "{{ encrypted_files.files | default([]) }}"
   loop_control:
-    loop_var: vault_file
+    loop_var: enc_file
   when:
-    - vaulted_files.matched | default(0) | int > 0
+    - encrypted_files.matched | default(0) | int > 0
 
-- name: Copy vaulted files (decrypt) to target
+- name: Copy Ansible Vault files (decrypt) to target
   become: true
   become_user: "{{ splunk_user }}"
   vars:
-    vault_rel_path: "{{ vault_file.path | replace(app_src_dir ~ '/', '') }}"
-    vault_dest_rel_path: "{{ vault_rel_path[:-6] if vault_rel_path.endswith('.vault') else vault_rel_path }}"
+    enc_rel_path: "{{ enc_file.path | replace(app_src_dir ~ '/', '') }}"
+    enc_dest_rel_path: >-
+      {{
+        enc_rel_path[:-6]
+        if enc_rel_path.endswith('.vault')
+        else (
+          enc_rel_path.split('.enc.', 1)[0] ~ '.' ~ enc_rel_path.split('.enc.', 1)[1]
+          if '.enc.' in enc_rel_path
+          else enc_rel_path
+        )
+      }}
   ansible.builtin.copy:
-    src: "{{ vault_file.path }}"
+    src: "{{ enc_file.path }}"
     dest: >-
       {{
         app_dest_dir ~ '/' ~
-        vault_dest_rel_path
+        enc_dest_rel_path
       }}
     decrypt: true
     mode: preserve
-  loop: "{{ vaulted_files.files | default([]) }}"
+  loop: "{{ encrypted_files.files | default([]) }}"
   loop_control:
-    loop_var: vault_file
+    loop_var: enc_file
   when:
-    - vaulted_files.matched | default(0) | int > 0
+    - encrypted_files.matched | default(0) | int > 0
+    - enc_rel_path.endswith('.vault')
   notify: notify standalone splunkd restart
+
+- name: Copy SOPS encrypted files (decrypt) to target
+  ansible.builtin.include_tasks: looped_tasks/deploy_sops_encrypted_file.yml
+  loop: "{{ encrypted_files.files | default([]) }}"
+  loop_control:
+    loop_var: enc_file
+  vars:
+    enc_rel_path: "{{ enc_file.path | replace(app_src_dir ~ '/', '') }}"
+    enc_dest_rel_path: >-
+      {{
+        enc_rel_path[:-6]
+        if enc_rel_path.endswith('.vault')
+        else (
+          enc_rel_path.split('.enc.', 1)[0] ~ '.' ~ enc_rel_path.split('.enc.', 1)[1]
+          if '.enc.' in enc_rel_path
+          else enc_rel_path
+        )
+      }}
+  when:
+    - encrypted_files.matched | default(0) | int > 0
+    - not enc_rel_path.endswith('.vault')
