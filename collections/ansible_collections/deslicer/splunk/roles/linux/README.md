@@ -24,8 +24,8 @@ Options exist to control which tasks should be executed and to add multiple cust
 ### Supported Operating Systems
 - RHEL 8, 9
 - CentOS Stream 8, 9
-- Amazon Linux 2, 2023
-- Ubuntu 20.04, 22.04, 24.04
+- Amazon Linux 2023
+- Ubuntu 22.04, 24.04
 - Debian 11, 12
 
 ### Prerequisites

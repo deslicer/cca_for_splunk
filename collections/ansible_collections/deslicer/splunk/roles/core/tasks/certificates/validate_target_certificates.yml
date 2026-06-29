@@ -1,0 +1,201 @@
+---
+# tasks file for deslicer.splunk.core
+#
+# Description:
+#   Validates that the server certificate only includes the leaf cert,
+#   and verifies it against a trusted CA chain using strict X.509 validation.
+#
+# Prerequisite:
+#   The variable `cca_splunk_extension_cert_rootca` must contain the full CA chain
+#   (intermediate -> root) required to validate the server cert.
+#
+# Author: Roger Lindquist (github.com/rlinq)
+# Release: 2025.3.1.2
+
+- name: Run certificate validation in a block
+  when:
+    - cca_splunk_cert_enrollment_method != 'selfsigned'
+  block:
+    - name: "Ensure proper EOL of file {{ privkey_staging_file_name }}"
+      delegate_to: localhost
+      connection: local
+      become: false
+      ansible.builtin.lineinfile:
+        line: '# CCA Managed private key file for Splunk Enterprise'
+        regexp: '^# CCA Managed'
+        dest: '{{ cca_splunk_extension_certs_path }}/{{ privkey_staging_file_name }}'
+        insertafter: 'EOF'
+
+    - name: "Check how many certs are in {{ cert_staging_file_name }}"
+      delegate_to: localhost
+      connection: local
+      become: false
+      check_mode: false
+      ansible.builtin.shell: |
+        grep -c -- "BEGIN CERTIFICATE" "{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}"
+      args:
+        executable: /bin/bash
+      register: cert_count_result
+      changed_when: false
+
+    - name: "Trim file to only include the server certificate (if needed) - {{ cert_staging_file_name }}"
+      delegate_to: localhost
+      connection: local
+      become: false
+      check_mode: false
+      ansible.builtin.shell: |
+        awk 'BEGIN {found=0} \
+             /-----BEGIN CERTIFICATE-----/ {found=1} \
+             {if (found) print} \
+             /-----END CERTIFICATE-----/ {exit}' \
+             "{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}" \
+        > "{{ cca_splunk_extension_certs_path }}/.{{ cert_staging_file_name }}.tmp" && \
+        mv "{{ cca_splunk_extension_certs_path }}/.{{ cert_staging_file_name }}.tmp" \
+           "{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}"
+      args:
+        executable: /bin/bash
+      when: cert_count_result.stdout | int > 1
+      register: cert_trim_result
+      changed_when: cert_count_result.stdout | int > 1
+
+    - name: "Ensure proper EOL of file {{ cert_staging_file_name }}"
+      delegate_to: localhost
+      connection: local
+      become: false
+      ansible.builtin.lineinfile:
+        line: '# CCA Managed certificate file for Splunk Enterprise'
+        regexp: '^# CCA Managed'
+        dest: '{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}'
+        insertafter: 'EOF'
+
+    - name: Assert that cca_splunk_extension_cert_rootca_fullpath is not empty for api enrollment method
+      ansible.builtin.assert:
+        that:
+          - cca_splunk_extension_cert_rootca_fullpath is defined
+        fail_msg: |
+          cca_splunk_extension_cert_rootca_fullpath is not defined for api enrollment method
+      when: cca_splunk_cert_enrollment_method == 'api'
+
+    - name: "Set fact for ca_chain_path based on enrollment method"
+      ansible.builtin.set_fact:
+        ca_chain_path: >-
+          {{
+            cca_splunk_extension_cert_rootca_fullpath | default('')
+            if cca_splunk_cert_enrollment_method == 'api'
+            else cca_splunk_extension_certs_path + '/' + cca_splunk_extension_cert_rootca
+          }}
+
+    - name: "Run strict OpenSSL X.509 validation against trusted CA chain"
+      delegate_to: localhost
+      connection: local
+      become: false
+      check_mode: false
+      ansible.builtin.command: >
+        openssl verify -verbose -x509_strict
+        -CAfile "{{ ca_chain_path }}"
+        "{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}"
+      register: openssl_verify_result
+      failed_when: false
+      changed_when: false
+      tags:
+        - skip_ansible_lint
+      when:
+        - strict_x509_cert_validation_test | default(false) or
+          (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('9.4.0', '>=')
+
+    - name: "Show OpenSSL validation error if failed"
+      delegate_to: localhost
+      connection: local
+      become: false
+      ansible.builtin.debug:
+        msg: "{{ openssl_verify_result.stderr }}"
+      when:
+        - openssl_verify_result is defined
+        - openssl_verify_result.rc is defined
+        - openssl_verify_result.rc != 0
+
+    - name: "Assert that the certificate chain is valid"
+      delegate_to: localhost
+      connection: local
+      become: false
+      ansible.builtin.assert:
+        that:
+          - openssl_verify_result.rc == 0
+        fail_msg: |
+          ❌ OpenSSL strict validation failed for the server certificate.
+
+          Common causes:
+          - The configured CA file ({{ ca_chain_path }}) is missing required intermediate certificates or has expired. See debug
+            output above for details.
+          - The server certificate is not properly signed by the CA chain.
+
+          Ensure the CA file contains ALL intermediate and root certificates in the correct order (intermediate -> root).
+
+          Manual validation:
+            openssl verify -x509_strict -CAfile {{ ca_chain_path }} {{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}
+      when:
+        - cca_splunk_cert_enrollment_method != 'selfsigned'
+        - openssl_verify_result.rc is defined
+        - openssl_verify_result.rc is defined
+
+    - name: "Get certificate information and validate expiration"
+      delegate_to: localhost
+      connection: local
+      become: false
+      community.crypto.x509_certificate_info:
+        path: "{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}"
+        valid_at:
+          renewal_notice_period: "+{{ cca_splunk_cert_min_validity_days | default(30) }}d"
+      register: cert_info_result
+      no_log: "{{ hide_password }}"
+      when:
+        - cca_splunk_cert_enrollment_method != 'selfsigned'
+        - openssl_verify_result.rc is defined
+        - openssl_verify_result.rc == 0
+
+    - name: "Assert certificate has sufficient validity period"
+      delegate_to: localhost
+      connection: local
+      become: false
+      ansible.builtin.assert:
+        that:
+          - cert_info_result.valid_at.renewal_notice_period
+        fail_msg: >-
+          ❌ Certificate expiration validation failed! Certificate does not have sufficient validity period.
+          Minimum required validity period: {{ cca_splunk_cert_min_validity_days | default(30) }} days.
+          Subject: {{ cert_info_result.subject.commonName | default('N/A') }},
+          Issuer: {{ cert_info_result.issuer.commonName | default('N/A') }},
+          Valid from: {{ cert_info_result.not_before | default('N/A') }},
+          Valid until: {{ cert_info_result.not_after | default('N/A') }},
+          Days until expiry:
+          {{
+            ((cert_info_result.not_after | default('') | to_datetime('%Y%m%d%H%M%S%z')) -
+             (ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%S%z'))).days |
+            default('N/A')
+          }}.
+          Please ensure the certificate is valid for at least {{ cca_splunk_cert_min_validity_days | default(30) }} days. Use cca_splunk_cert_min_validity_days
+          to override the default.
+      when:
+        - cca_splunk_cert_enrollment_method != 'selfsigned'
+        - cert_info_result is defined
+        - cert_info_result.valid_at is defined
+
+    - name: "Set fact for cert file names and concatenation order of cert of type {{ cert_type }}"
+      ansible.builtin.set_fact:
+        certificate_data:
+          - '{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}'
+          - '{{ cca_splunk_extension_certs_path }}/{{ privkey_staging_file_name }}'
+
+    - name: "DRY RUN - Perform a final cert build for cert of type {{ cert_type }}"
+      ansible.builtin.template:
+        src: etc/auth/certs/build_final_cert.j2
+        dest: '{{ cca_splunk_certs_path }}/{{ cert_file_name }}'
+        mode: '0644'
+      check_mode: true
+      register: final_cert_file_result
+
+    - name: "Set fact if cert is found and valid of type {{ cert_type }} "
+      ansible.builtin.set_fact:
+        {"{{ facts_variable }}": true}
+      when:
+        - not final_cert_file_result.changed

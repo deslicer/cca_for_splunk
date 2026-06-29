@@ -1,0 +1,157 @@
+---
+# Play 1: compute per-host flattened objects (your existing logic)
+- name: Compute flattened host settings
+  hosts: splunk_servers
+  gather_facts: false
+  vars:
+    hide_password: false
+  tasks:
+    - name: Ensure general settings are in the expected format
+      ansible.builtin.set_fact:
+        splunk_conf_general_settings_flattened: >-
+          {{ splunk_conf_general_settings | default([]) | deslicer.splunk.splunk_conf_flatten }}
+      when:
+        - splunk_conf_general_settings_flattened is not defined
+
+    - name: Ensure group settings are in the expected format
+      ansible.builtin.set_fact:
+        splunk_conf_group_settings_flattened: >-
+          {{ splunk_conf_group_settings | default([]) | deslicer.splunk.splunk_conf_flatten }}
+      when:
+        - splunk_conf_group_settings_flattened is not defined
+
+    - name: Ensure host settings are in the expected format
+      ansible.builtin.set_fact:
+        splunk_conf_host_settings_flattened: >-
+          {{ splunk_conf_host_settings | default([]) | deslicer.splunk.splunk_conf_flatten }}
+      when:
+        - splunk_conf_host_settings_flattened is not defined
+
+
+# Play 2: export to JSON on localhost
+- name: Export host variables to JSON
+  hosts: localhost
+  gather_facts: false
+  vars:
+    export_path: "./hostvars_export.json"
+    include_all_vars: false
+    target_group: "splunk_servers"
+    # Variables to filter out (already covered in flattened format)
+    filtered_vars:
+      - splunk_conf_general_settings
+      - splunk_conf_group_settings
+      - splunk_conf_host_settings
+
+  tasks:
+    - name: Initialize export object
+      ansible.builtin.set_fact:
+        hostvars_export:
+          meta:
+            generated_at: "{{ lookup('pipe', 'date -Is') }}"
+            inventory_group: "{{ target_group }}"
+            inventory_hosts: "{{ groups[target_group] | default([]) }}"
+          group_vars: {}
+          host_vars: {}
+          hosts: {}
+
+    - name: Get filtered host variables for all hosts
+      ansible.builtin.set_fact:
+        filtered_host_vars: >-
+          {%- set host_vars = hostvars[item] | default({}) -%}
+          {%- set filtered = {} -%}
+          {%- for key in host_vars.keys() -%}
+            {%- if key not in filtered_vars -%}
+              {%- set _ = filtered.update({key: host_vars[key]}) -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ filtered }}
+      loop: "{{ groups[target_group] | default([]) }}"
+      register: filtered_host_vars_result
+      when: item in hostvars
+
+    - name: Export group variables (extracted from group membership)
+      ansible.builtin.set_fact:
+        hostvars_export: >-
+          {{
+            hostvars_export
+            | combine({
+              "group_vars": hostvars_export.group_vars | combine({
+                group_name: group_vars_dict
+              })
+            }, recursive=True)
+          }}
+      loop: "{{ groups | dict2items }}"
+      vars:
+        group_name: "{{ item.key }}"
+        # Get all hosts in this group
+        group_hosts: "{{ item.value }}"
+        # Try to get group vars using vars lookup
+        # Note: This works for variables defined in inventory, but may not capture
+        # all group_vars for all inventory types (e.g., group_vars files)
+        group_vars_dict: >-
+          {%- set result = {} -%}
+          {%- set group_vars_raw = lookup('vars', group_name, default={}) | default({}) -%}
+          {%- for key, value in group_vars_raw.items() -%}
+            {%- if key not in filtered_vars -%}
+              {%- set _ = result.update({key: value}) -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ result }}
+      when:
+        - group_hosts | length > 0
+        - group_name != 'all'
+      ignore_errors: true
+
+    - name: Export host variables (filtered)
+      ansible.builtin.set_fact:
+        hostvars_export: >-
+          {{
+            hostvars_export
+            | combine({
+              "host_vars": hostvars_export.host_vars | combine({
+                item.item: item.ansible_facts.filtered_host_vars
+              })
+            }, recursive=True)
+          }}
+      loop: "{{ filtered_host_vars_result.results }}"
+
+    - name: Add each host to export
+      ansible.builtin.set_fact:
+         hostvars_export: >-
+           {{
+              hostvars_export
+             | combine({
+               "hosts": hostvars_export.hosts | combine({
+                item: (
+                  include_all_vars
+                  | ternary(
+                      hostvars_export.host_vars[item] | default({}) | combine({
+                        "inventory_hostname": item,
+                        "groups": (groups | dict2items | selectattr('value','contains', item) | map(attribute='key') | list),
+                        "ansible_host": (hostvars[item].ansible_host | default(None)),
+                        "splunk_conf_general_settings_flattened": (hostvars[item].splunk_conf_general_settings_flattened | default({})),
+                        "splunk_conf_group_settings_flattened": (hostvars[item].splunk_conf_group_settings_flattened | default({})),
+                        "splunk_conf_host_settings_flattened": (hostvars[item].splunk_conf_host_settings_flattened | default({}))
+                      }, recursive=True),
+                      {
+                        "inventory_hostname": item,
+                        "groups": (groups | dict2items | selectattr('value','contains', item) | map(attribute='key') | list),
+                        "ansible_host": (hostvars[item].ansible_host | default(None)),
+                        "splunk_conf_general_settings_flattened": (hostvars[item].splunk_conf_general_settings_flattened | default({})),
+                        "splunk_conf_group_settings_flattened": (hostvars[item].splunk_conf_group_settings_flattened | default({})),
+                        "splunk_conf_host_settings_flattened": (hostvars[item].splunk_conf_host_settings_flattened | default({}))
+                      }
+                    )
+                )
+              })
+            }, recursive=True)
+           }}
+      loop: "{{ groups[target_group] | default([]) }}"
+
+
+    - name: Write JSON export to file
+      connection: local
+      ansible.builtin.copy:
+        dest: "{{ export_path }}"
+        content: "{{ hostvars_export | to_nice_json }}"
+        mode: "0600"

@@ -1,0 +1,26 @@
+---
+# tasks file for deslicer.splunk.core
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2023.3.2
+
+# facts_variable: 'cca_splunk_inputs_ssl' is set in validate_target_certificates.yml
+# for manual certs or as a fallback here if the cert enrollment method is selfsigned
+- name: Set fact for inputs cert to be used in common tasks
+  ansible.builtin.set_fact:
+    cert_file_name: '{{ cca_splunk_certs_inputs_cert }}'
+    cert_staging_file_name: '{{ cca_splunk_certs_inputs_staging_cert }}'
+    privkey_file_name: '{{ cca_splunk_certs_inputs_key }}'
+    privkey_staging_file_name: '{{ cca_splunk_certs_inputs_staging_key }}'
+    privkey_password: '{{ cca_splunk_certs_inputs_sslpassword }}'
+    facts_variable: 'cca_splunk_inputs_ssl'
+    cert_type: 'inputs'
+  no_log: "{{ hide_password }}"
+
+- name: Include task that includes common certificate tasks
+  ansible.builtin.include_tasks: certificates_main.yml
